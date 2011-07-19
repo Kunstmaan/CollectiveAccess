@@ -1,2 +1,13 @@
 Model Folder
 *.pyc
+media/media
+media/**/*
+documents/
+*.log
+cache/
+app/tmp/*
+.settings/
+nbproject/
+.buildpath
+.project
+.AbiSuite/
