@@ -295,10 +295,15 @@ class Media extends BaseObject {
 		if (!$ps_mimetype) { return _t('No media available'); }
 		$va_plugin_names = $this->getPluginNames();
 		foreach($va_plugin_names as $vs_plugin_name) {
+            // NOTE: Next lines were adapted for image annotations! This could probably screw things up...
+/*
 			$p = $this->getUnregisteredPlugin($vs_plugin_name);
 			if ((isset($p->info['EXPORT'][$ps_mimetype])) || (isset($p->info['IMPORT'][$ps_mimetype]))) {
+ */
+			$p = $this->getPlugin($vs_plugin_name);
+			if (isset($p['IMPORT'][$ps_mimetype])) {
 				$pa_properties["mimetype"] = $ps_mimetype;
-				return $p->htmlTag($ps_url, $pa_properties, $pa_options, $pa_volume_info);
+				return $p['INSTANCE']->htmlTag($ps_url, $pa_properties, $pa_options, $pa_volume_info);
 			}
 		}
 		

@@ -47,7 +47,14 @@
 	$o_properties 		= $t_subject->getAnnotationPropertyCoderInstance($vs_annotation_type);
 	$vs_goto_property 	= $o_properties->getAnnotationGotoProperty();
 	$va_prop_list 		= $va_init_props = array();
-	
+
+	if ($vs_annotation_type == 'ImageBased') {
+		$hasdeletehandler = true;
+		$addbuttonclassname = "cAddItemButton";
+	} else {
+		$addbuttonclassname = "caAddItemButton";
+	}
+
 	foreach(($va_properties = $o_properties->getPropertyList()) as $vs_property) { 
 		$va_prop_list[] = "'".$vs_property."'"; $va_init_props[$vs_property] = ''; 
 	}
@@ -78,9 +85,9 @@
 ?>
 
 <!-- BEGIN Media Player -->
-<div class="bundleContainer" style="text-align:center; padding:5px;">
-	<?php print $t_subject->getMediaTag('media', $o_properties->getDisplayMediaVersion(), array('viewer_width' => 725, 'viewer_height' => 370, 'id' => 'annotation_media_player', 'poster_frame_url' => $t_subject->getMediaUrl('media', 'medium'))); ?>
-</div>
+<?php
+print $t_subject->getMediaTag('media', $o_properties->getDisplayMediaVersion(), array('request' => $this->request, 'viewer_width' => 725, 'viewer_height' => 370, 'viewer_base_url' => $this->request->getBaseUrlPath(), 'viewer_theme_url' => $this->request->getThemeUrlPath(), 'id' => 'annotation_media_player', 'poster_frame_url' => $t_subject->getMediaUrl('media', 'medium'), 'name' => 'media_'.$t_subject->getPrimaryKey(), 'annotate' => 'true', 'addButtonClassName' => 'caAddItemButton', 'object_id' => $t_subject->getPrimaryKey()));
+?>
 <!-- END Media Player -->
 
 <!-- BEGIN Annotation List -->
@@ -114,9 +121,9 @@
 ?>
 					<td><?php print $t_item_label->htmlFormElement('name', null, array('classname' => 'labelLocale', 'id' => "{fieldNamePrefix}label_{n}", 'name' => "{fieldNamePrefix}label_{n}", "value" => "{{label}}", 'no_tooltips' => false, 'width' => 35,'textAreaTagName' => 'textentry')); ?></td>
 					<td><a href="#" onclick="jQuery('#{fieldNamePrefix}moreOptions_{n}').slideToggle(250); return false;" class="button"><?php print _t('More'); ?> &rsaquo;</a></td>
-					
+
 					<td>
-						<a href="#" class="caDeleteItemButton"><?php print caNavIcon($this->request, __CA_NAV_BUTTON_DEL_BUNDLE__); ?></a>						
+						<a href="#" class="caDeleteItemButton"><?php print caNavIcon($this->request, __CA_NAV_BUTTON_DEL_BUNDLE__); ?></a>
 					</td>
 				</tr>
 			</table>
@@ -132,17 +139,17 @@
 			</div>
 		</div>
 	</textarea>
-	
-	<div class="bundleContainer">	
+
+	<div class="bundleContainer">
 		<div class='button labelInfo caAddItemButton'><a href='#'><?php print caNavIcon($this->request, __CA_NAV_BUTTON_ADD__); ?> <?php print _t("Add annotation"); ?> &rsaquo;</a></div>
 		<div class="caItemList" style="width: 100%; overflow-y: auto; min-height: 300px;";>
-		
+
 		</div>
 	</div>
 </div>
 
 <script type="text/javascript">
-	caUI.initBundle('#<?php print $vs_id_prefix.$t_item->tableNum().'_annotations'; ?>', {
+	var bundle = caUI.initBundle('#<?php print $vs_id_prefix.$t_item->tableNum().'_annotations'; ?>', {
 		fieldNamePrefix: '<?php print $vs_id_prefix; ?>_',
 		templateValues: ['status', 'access', 'locale_id', 'label', <?php print join(',', $va_prop_list); ?>],
 		initialValues: <?php print json_encode($va_inital_values); ?>,
@@ -151,13 +158,38 @@
 		itemID: '<?php print $vs_id_prefix; ?>Item_',
 		templateClassName: 'caItemTemplate',
 		itemListClassName: 'caItemList',
-		addButtonClassName: 'caAddItemButton',
+		addButtonClassName: '<?php print $addbuttonclassname; ?>',
 		deleteButtonClassName: 'caDeleteItemButton',
-		showEmptyFormsOnLoad: 1,
 		showOnNewIDList: [],
 		hideOnNewIDList: ['<?php print $vs_id_prefix; ?>_gotoButton_'],
 		addMode: 'prepend',
-		incrementLocalesForNewBundles: false
+		showEmptyFormsOnLoad:0,
+		incrementLocalesForNewBundles: false,
+		onDeleteItem:function(id){ if('<?php print $hasdeletehandler ?>'=='1'){ deleteHandler(id); } }
 	});
+
+if('<?php print $hasdeletehandler; ?>'=='1'){
+	function deleteHandler(id){
+		var id_prefix='<?php print $vs_id_prefix; ?>';
+		var fl_top = id_prefix+'_top_'+id;
+		var fl_left =id_prefix+'_left_'+id;
+
+ 		var remove_top=$('#'+fl_top).val();
+ 		var remove_left=$('#'+fl_left).val();
+
+		$(".image-annotate-area").each(function(){
+
+			var element = this;
+			var left = element.style.left;
+			var top = element.style.top;
+
+			if((remove_top==parseInt(top)) && (remove_left==parseInt(left))){
+				$(this).remove();
+				return false;
+			}
+		});
+	}
+}
+
 </script>
 <!-- END Annotation List -->

@@ -99,6 +99,7 @@ class WLPlugMediaMagickWand Extends WLPlug Implements IWLPlugMedia {
 			"DESPECKLE"			=> array(""),
 			"SHARPEN"			=> array("radius", "sigma"),
 			"UNSHARPEN_MASK"	=> array("radius", "sigma", "amount", "threshold"),
+            "MAX_SCALE" 		=> array("width", "height"),
 		),
 		"PROPERTIES" => array(
 			"width" 			=> 'R',
@@ -834,6 +835,42 @@ class WLPlugMediaMagickWand Extends WLPlug Implements IWLPlugMedia {
 			}
 			break;
 		# -----------------------
+		case "MAX_SCALE":
+			$aa = $parameters["antialiasing"];
+			if ($aa <= 0) { $aa = 0; }
+			if ($cw < $w && $ch < $h) {
+				if (!MagickResizeImage($this->handle, $cw , $ch , MW_CubicFilter, $aa)) {
+                    $reason = WandGetExceptionType($this->handle);
+                    $description = WandGetExceptionString($this->handle);
+                    $this->postError(1610, _t("%1: %2 during resize operation", $reason, $description), "WLPlugMagickWand->transform()");
+                    return false;
+				}
+				$this->properties["width"] = $cw;
+				$this->properties["height"] = $ch;
+			} else {
+				$aspect_ratio = $cw / $ch;
+				$screen_ratio = $w / $h;
+
+				if ($aspect_ratio < $screen_ratio) {
+					$w = $aspect_ratio * $h;
+				} else {
+					$h = $w / $aspect_ratio;
+				}
+
+				$w = round($w);
+				$h = round($h);
+
+				if (!MagickResizeImage($this->handle, $w , $h , MW_CubicFilter, $aa)) {
+                    $reason = WandGetExceptionType($this->handle);
+                    $description = WandGetExceptionString($this->handle);
+                    $this->postError(1610, _t("%1: %2 during resize operation", $reason, $description), "WLPlugMagickWand->transform()");
+                    return false;
+				}
+				$this->properties["width"] = $w;
+				$this->properties["height"] = $h;
+			}
+			break;
+		# -----------------------
 		}
 		return 1;
 	}
@@ -1046,8 +1083,9 @@ class WLPlugMediaMagickWand Extends WLPlug Implements IWLPlugMedia {
 		
 		foreach(array(
 			'name', 'url', 'viewer_width', 'viewer_height', 'idname',
-			'viewer_base_url', 'width', 'height',
+			'viewer_base_url', 'viewer_theme_url', 'width', 'height',
 			'vspace', 'hspace', 'alt', 'title', 'usemap', 'align', 'border', 'class', 'style',
+            'annotate', 'object_id', 'addButtonClassName',
 			
 			'tilepic_init_magnification', 'tilepic_use_labels', 'tilepic_edit_labels', 'tilepic_parameter_list',
 			'tilepic_app_parameters', 'directly_embed_flash', 'tilepic_label_processor_url', 'tilepic_label_typecode',
@@ -1089,6 +1127,7 @@ class WLPlugMediaMagickWand Extends WLPlug Implements IWLPlugMedia {
 			$viewer_height = 			$options["viewer_height"];
 			
 			$viewer_base_url =			$options["viewer_base_url"];
+            $viewer_theme_url =			$options["viewer_theme_url"];
 			$directly_embed_flash = 	$options['directly_embed_flash'];
 			
 			if(!$viewer_label_processor_url = $options["tilepic_label_processor_url"]) {
@@ -1192,13 +1231,63 @@ EOT;
 				$border = 0;
 			}
 			
+			if ($options["annotate"]) {
+				$annotate = $options['annotate'];
+			} else {
+				$annotate = false;
+			}
+
+			$viewer_base_url = $options["viewer_base_url"];
+			$viewer_theme_url = $options["viewer_theme_url"];
+			$request = $options["request"];
 			
 			if (!isset($properties["width"])) $properties["width"] = 100;
 			if (!isset($properties["height"])) $properties["height"] = 100;
 					
 			if (($url) && ($properties["width"] > 0) && ($properties["height"] > 0)) {
-			
-				return "<img src='$url' width='".$properties["width"]."' height='".$properties["height"]."' border='$border' $vspace $hspace $alt $title $name $usemap $align $style $class />";
+				$tag = "";
+				if ($annotate) {
+					JavascriptLoadManager::register('annotate');
+					$object_id = $options["object_id"];
+					$rep  = new ca_object_representations($object_id);
+					$media_info = $rep->get('media');
+
+					$original_width = $media_info["original"]["PROPERTIES"]["width"];
+					$original_height = $media_info["original"]["PROPERTIES"]["height"];
+					$resized_width = $properties["width"];
+					$resized_height = $properties["height"];
+
+					$wasresized = 0;
+					if (($original_width > $resized_width) || ($original_height > $resized_height)) {
+						$wasresized = 1;
+					}
+					$addButtonClassName = $options["addButtonClassName"];
+
+					$getUrl = caNavUrl($request, 'lookup', 'ImageAnnotation', 'Get', array('object' => $object_id));
+
+					$tag = <<<EOT
+					<style type="text/css" media="all">@import "$viewer_theme_url/css/annotation.css";</style>
+					<script language="javascript">
+					$(window).load(function() {
+						$("img[name]='media_$object_id'").annotateImage({
+							useAjax:true,
+							getUrl: "$getUrl",
+							editable:true,
+							addButtonClassName:'$addButtonClassName',
+							original_width:'$original_width',
+							original_height:'$original_height',
+							resized_width:'$resized_width',
+							resized_height:'$resized_height',
+							resized:'$wasresized',
+						});
+					});
+					</script>
+EOT;
+				}
+
+				$tag."<img src='$url' width='".$properties["width"]."' height='".$properties["height"]."' border='$border' $vspace $hspace $alt $title $name $usemap $align $style $class />";
+
+				return $tag;
 			} else {
 				return "<strong>No image</strong>";
 			}
