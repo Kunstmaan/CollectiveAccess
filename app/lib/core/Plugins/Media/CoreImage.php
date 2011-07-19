@@ -819,7 +819,7 @@ class WLPlugMediaCoreImage Extends WLPlug Implements IWLPlugMedia {
 		
 		foreach(array(
 			'name', 'url', 'viewer_width', 'viewer_height', 'idname',
-			'viewer_base_url', 'width', 'height',
+			'viewer_base_url', 'viewer_theme_url', 'width', 'height',
 			'vspace', 'hspace', 'alt', 'title', 'usemap', 'align', 'border', 'class', 'style',
 			
 			'tilepic_init_magnification', 'tilepic_use_labels', 'tilepic_edit_labels', 'tilepic_parameter_list',
@@ -862,8 +862,9 @@ class WLPlugMediaCoreImage Extends WLPlug Implements IWLPlugMedia {
 			$viewer_height = 			$options["viewer_height"];
 			
 			$viewer_base_url =			$options["viewer_base_url"];
+			$viewer_theme_url =			$options["viewer_theme_url"];
 			$directly_embed_flash = 	$options['directly_embed_flash'];
-			
+
 			if(!$viewer_label_processor_url = $options["tilepic_label_processor_url"]) {
 				$viewer_label_processor_url = $viewer_base_url."/viewers/apps/labels.php";
 			}
@@ -879,33 +880,176 @@ class WLPlugMediaCoreImage Extends WLPlug Implements IWLPlugMedia {
 				$viewer_height = $this->opo_config->get("tilepic_viewer_height");
 				if (!$viewer_height) { $viewer_height = 500; }
 			}
-			
-			$vs_flash_vars = "tpViewerUrl=$viewer_base_url/viewers/apps/tilepic.php&tpLabelProcessorURL=$viewer_label_processor_url&tpImageUrl=$url&tpWidth=$width&tpHeight=$height&tpInitMagnification=$init_magnification&tpScales=$layers&tpRatio=$ratio&tpTileWidth=$tile_width&tpTileHeight=$tile_height&tpUseLabels=$use_labels&tpEditLabels=$edit_labels&tpParameterList=$parameter_list$vs_app_parameters&labelTypecode=$vn_label_typecode&labelDefaultTitle=".urlencode($vs_label_title)."&labelTitleReadOnly=".$vn_label_title_readonly;
-			
-			if (!$directly_embed_flash) {
-				$tag = <<<EOT
-				<div id="$idname">
-					Flash version 8 or better required!
+
+			$config=Configuration::load();
+			$use_js = $config->get("javascript_tilepic_viewer");
+
+			if ($use_js == 'true') {
+                $tpImageUrl = $viewer_base_url."/viewers/apps/tilepic.php?p=" . $url;
+    			$tag = <<<EOT
+				<style type="text/css">
+					@import url($viewer_theme_url/css/panojs.css);
+				</style>
+
+				<style type="text/css">
+			#viewer {
+				background-color: #EDEDED;
+				width: 100%;
+				height: 480px;
+			}
+				</style>
+				<div id="header"> &nbsp; </div>
+				<div id="viewer">
+					<div class="well"><!-- --></div>
+					<div class="surface"><!-- --></div>
+					<p class="controls">
+						<span class="zoomIn" title="Zoom In">+</span>
+						<span class="zoomOut" title="Zoom Out">-</span>
+						<span class="maximize"><img src="$viewer_theme_url/graphics/icons/window.gif" style="position:absolute; bottom: 4px; 	right: 5px;" title="Maximize"/></span>
+					</p>
 				</div>
-				<script type='text/javascript'>
-					swfobject.embedSWF("$viewer_base_url/viewers/apps/bischen.swf", "$idname", "$viewer_width", "$viewer_height", "8.0.0","$viewer_base_url/viewers/apps/expressInstall.swf", false, {AllowScriptAccess: "always", allowFullScreen: "true", flashvars:"$vs_flash_vars", bgcolor: "#ffffff"});
+
+				<div id="footer"> &nbsp; </div>
+
+				<script src='$viewer_base_url/js/jquery/PanoJS.js' type='text/javascript'></script>
+				<script src='$viewer_base_url/js/jquery/EventUtils.js' type='text/javascript'></script>
+
+				<script type="text/javascript">
+
+				var viewerBean = null;
+				var maximized = false;
+
+				var tpScales = $layers;
+				var tpRatio = $ratio;
+				var maxZoom = tpScales-1; //-> to be passed to panojs
+				var imageWidth = $width;
+				var imageHeight = $height;
+				var tpTileWidth = $tile_width;
+				var tpTileHeight = $tile_height;
+				var tpBlankImage = '$viewer_theme_url/graphics/icons/blank.gif';
+
+				function getTileURL(x, y, zoom) {
+					var s = maxZoom - zoom;
+					var totalWidth = imageWidth;
+					for (var i = 0; i < s; i++) {
+						totalWidth = totalWidth / tpRatio;
+					}
+					var totalHeight = imageHeight;
+					for (var i = 0; i < s; i++) {
+						totalHeight = totalHeight / tpRatio;
+					}
+					var start = 1;
+					for (var i = 0; i < zoom; i++) {
+						temp_totalWidth = imageWidth;
+						for (var j = 0; j < maxZoom-i; j++) {
+							temp_totalWidth = temp_totalWidth / tpRatio;
+						}
+						temp_totalHeight = imageHeight;
+						for (var j = 0; j < maxZoom-i; j++) {
+							temp_totalHeight = temp_totalHeight / tpRatio;
+						}
+						start += getMaxX(temp_totalWidth, i) * getMaxY(temp_totalHeight, i);
+					}
+					var maxX = getMaxX(totalWidth, zoom+1);
+					if (x >= maxX) {
+						return tpBlankImage;
+					}
+					var maxY = getMaxY(totalHeight, zoom+1);
+					if (y >= maxY) {
+						return tpBlankImage;
+					}
+					var result = start + x + y * maxX;
+					return '$tpImageUrl'+ "&t=" + result;
+				}
+				function getMaxX(totalWidth, zoom) {
+					return Math.ceil(totalWidth / tpTileWidth);
+				}
+				function getMaxY(totalHeight, zoom) {
+					return Math.ceil(totalHeight / tpTileHeight);
+				}
+
+				var tileurlprovider = new PanoJS.TileUrlProvider('','','');
+				tileurlprovider.assembleUrl = function(xIndex, yIndex, zoom) {
+						return getTileURL(xIndex,yIndex,zoom);
+				}
+
+				function initializeGraphic(e) {
+					// opera triggers the onload twice
+					if (viewerBean == null) {
+
+						viewerBean = new PanoJS('viewer', {
+							tileUrlProvider: tileurlprovider,
+							tileSize: tpTileWidth,
+							maxZoom: tpScales - 1,
+							initialZoom: 1,
+							blankTile: tpBlankImage,
+							loadingTile: tpBlankImage
+						});
+						viewerBean.init();
+					}
+				}
+
+				function reinitializeGraphic(e) {
+					viewerBean.resize();
+				}
+
+				// uses the callback format PanoJS.{className}Handler
+				PanoJS.maximizeHandler = function(e) {
+
+					if (maximized) {
+						// HACK: remove auto-fit to window (this needs to be a function)
+						viewerBean.border = -1;
+						document.body.style.padding = '10px';
+						document.getElementById('header').style.display = 'block';
+						document.getElementById('footer').style.display = 'block';
+						document.getElementById('viewer').style.width = '100%';
+						document.getElementById('viewer').style.height = '480px';
+					}
+					else {
+						document.body.style.padding = '0';
+						document.getElementById('header').style.display = 'none';
+						document.getElementById('footer').style.display = 'none';
+						// HACK allow auto-fit to window (this needs to be a function)
+						viewerBean.border = 0;
+						viewerBean.resize();
+					}
+
+					maximized = !maximized;
+				}
+
+				initializeGraphic();
+
 				</script>
 EOT;
-			} else {		
-				$tag = <<<EOT
-		<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" 
-			width="$viewer_width" height="$viewer_height" id="$idname" align="middle">
-			<param name="allowScriptAccess" value="sameDomain" />
-			<param name="FlashVars" value="$vs_flash_vars" />
-			<param name="movie" value="$viewer_base_url/viewers/apps/bischen.swf" />
-			<param name="quality" value="high" />
-			<param name="bgcolor" value="#ffffff" />
-			<embed src="$viewer_base_url/viewers/apps/bischen.swf" quality="high" bgcolor="#ffffff" width="$viewer_width" height="$viewer_height" name="$idname" align="middle" 
-				FlashVars="$vs_flash_vars" 
-				allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
-		</object>
+			} else {
+
+                $vs_flash_vars = "tpViewerUrl=$viewer_base_url/viewers/apps/tilepic.php&tpLabelProcessorURL=$viewer_label_processor_url&tpImageUrl=$url&tpWidth=$width&tpHeight=$height&tpInitMagnification=$init_magnification&tpScales=$layers&tpRatio=$ratio&tpTileWidth=$tile_width&tpTileHeight=$tile_height&tpUseLabels=$use_labels&tpEditLabels=$edit_labels&tpParameterList=$parameter_list$vs_app_parameters&labelTypecode=$vn_label_typecode&labelDefaultTitle=".urlencode($vs_label_title)."&labelTitleReadOnly=".$vn_label_title_readonly;
+
+                if (!$directly_embed_flash) {
+                    $tag = <<<EOT
+                    <div id="$idname">
+                        Flash version 8 or better required!
+                    </div>
+                    <script type='text/javascript'>
+                        swfobject.embedSWF("$viewer_base_url/viewers/apps/bischen.swf", "$idname", "$viewer_width", "$viewer_height", "8.0.0","$viewer_base_url/viewers/apps/expressInstall.swf", false, {AllowScriptAccess: "always", allowFullScreen: "true", flashvars:"$vs_flash_vars", bgcolor: "#ffffff"});
+                    </script>
 EOT;
-			}
+                } else {
+                    $tag = <<<EOT
+            <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0"
+                width="$viewer_width" height="$viewer_height" id="$idname" align="middle">
+                <param name="allowScriptAccess" value="sameDomain" />
+                <param name="FlashVars" value="$vs_flash_vars" />
+                <param name="movie" value="$viewer_base_url/viewers/apps/bischen.swf" />
+                <param name="quality" value="high" />
+                <param name="bgcolor" value="#ffffff" />
+                <embed src="$viewer_base_url/viewers/apps/bischen.swf" quality="high" bgcolor="#ffffff" width="$viewer_width" height="$viewer_height" name="$idname" align="middle"
+                    FlashVars="$vs_flash_vars"
+                    allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
+            </object>
+EOT;
+                }
+            }
 			return $tag;
 		} else {
 			#

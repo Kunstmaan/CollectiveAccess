@@ -99,7 +99,8 @@ if (($vn_num_multifiles = $this->getVar('num_multifiles')) == 0) {
 				print $t_rep->getMediaTag('media', $vs_show_version, array(
 					'id' => 'caMediaOverlayContentMedia', 
 					'viewer_width' => "100%", 'viewer_height' => "100%",
-					'viewer_base_url' => $this->request->getBaseUrlPath()
+					'viewer_base_url' => $this->request->getBaseUrlPath(),
+					'viewer_theme_url' => $this->request->getThemeUrlPath()
 				))."<br/>";
 				break;
 			case 'h264_hi':
