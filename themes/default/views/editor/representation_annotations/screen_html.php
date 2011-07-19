@@ -34,12 +34,19 @@
 
 	$vb_print_buttons = (intval($vn_annotation_id) > 0 ? $vb_can_edit : $vb_can_create);
 	
-	print $vs_control_box = caFormControlBox(
+	$control_box_top = caShowControlBox($this->request, $this->appconfig,'top');
+	$control_box_bottom = caShowControlBox($this->request, $this->appconfig,'bottom');
+
+	$vs_control_box = caFormControlBox(
 		($vb_print_buttons ? caFormSubmitButton($this->request, __CA_NAV_BUTTON_SAVE__, _t("Save"), 'RepresentationAnnotationEditorForm') : '').' '.
 		($vb_print_buttons ? caNavButton($this->request, __CA_NAV_BUTTON_CANCEL__, _t("Cancel"), 'editor/representation_annotations', 'RepresentationAnnotationEditor', 'Edit/'.$this->request->getActionExtra(), array('annotation_id' => $vn_annotation_id)) : ''),
 		'', 
 		((intval($vn_annotation_id) > 0) && $vb_can_delete) ? caNavButton($this->request, __CA_NAV_BUTTON_DELETE__, _t("Delete"), 'editor/representation_annotations', 'RepresentationAnnotationEditor', 'Delete/'.$this->request->getActionExtra(), array('annotation_id' => $vn_annotation_id)) : ''
 	);
+
+    if ($control_box_top) {
+        print $vs_control_box;
+    }
 ?>
 	<div class="sectionBox">
 <?php
@@ -51,7 +58,9 @@
 									
 			print join("\n", $va_form_elements);
 			
-			print $vs_control_box;
+            if ($control_box_bottom) {
+                print $vs_control_box;
+            }
 ?>
 			<input type='hidden' name='annotation_id' value='<?php print $vn_annotation_id; ?>'/>
 		</form>

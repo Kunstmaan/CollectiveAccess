@@ -34,12 +34,19 @@
 
 	$vb_print_buttons = (intval($vn_entity_id) > 0 ? $vb_can_edit : $vb_can_create);
 	
-	print $vs_control_box = caFormControlBox(
+	$control_box_top = caShowControlBox($this->request, $this->appconfig,'top');
+	$control_box_bottom = caShowControlBox($this->request, $this->appconfig,'bottom');
+
+    $vs_control_box = caFormControlBox(
 		($vb_print_buttons ? caFormSubmitButton($this->request, __CA_NAV_BUTTON_SAVE__, _t("Save"), 'EntityEditorForm') : '').' '.
 		($vb_print_buttons ? caNavButton($this->request, __CA_NAV_BUTTON_CANCEL__, _t("Cancel"), 'editor/entities', 'EntityEditor', 'Edit/'.$this->request->getActionExtra(), array('entity_id' => $vn_entity_id)) : ''),
 		'', 
 		((intval($vn_entity_id) > 0) && $vb_can_delete) ? caNavButton($this->request, __CA_NAV_BUTTON_DELETE__, _t("Delete"), 'editor/entities', 'EntityEditor', 'Delete/'.$this->request->getActionExtra(), array('entity_id' => $vn_entity_id)) : ''
 	);
+
+    if ($control_box_top) {
+        print $vs_control_box;
+    }
 ?>
 	<div class="sectionBox">
 <?php
@@ -51,7 +58,9 @@
 			
 			print join("\n", $va_form_elements);
 			
-			print $vs_control_box;
+            if ($control_box_bottom) {
+                print $vs_control_box;
+            }
 ?>
 			<input type='hidden' name='entity_id' value='<?php print $vn_entity_id; ?>'/>
 		</form>

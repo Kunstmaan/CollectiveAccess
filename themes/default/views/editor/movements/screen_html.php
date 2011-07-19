@@ -34,12 +34,19 @@
 
 	$vb_print_buttons = (intval($vn_movement_id) > 0 ? $vb_can_edit : $vb_can_create);
 	
-	print $vs_control_box = caFormControlBox(
+	$control_box_top = caShowControlBox($this->request, $this->appconfig,'top');
+	$control_box_bottom = caShowControlBox($this->request, $this->appconfig,'bottom');
+
+	$vs_control_box = caFormControlBox(
 		($vb_can_edit ? caFormSubmitButton($this->request, __CA_NAV_BUTTON_SAVE__, _t("Save"), 'MovementEditorForm') : '').' '.
 		($vb_can_edit ? caNavButton($this->request, __CA_NAV_BUTTON_CANCEL__, _t("Cancel"), 'editor/movements', 'MovementEditor', 'Edit/'.$this->request->getActionExtra(), array('movement_id' => $vn_movement_id)) : ''), 
 		'', 
 		((intval($vn_movement_id) > 0) && $vb_can_delete) ? caNavButton($this->request, __CA_NAV_BUTTON_DELETE__, _t("Delete"), 'editor/movements', 'MovementEditor', 'Delete/'.$this->request->getActionExtra(), array('movement_id' => $vn_movement_id)) : ''
 	);
+
+    if ($control_box_top) {
+        print $vs_control_box;
+    }
 ?>
 	<div class="sectionBox">
 <?php
@@ -51,7 +58,9 @@
 			
 			print join("\n", $va_form_elements);
 			
-			print $vs_control_box;
+            if ($control_box_bottom) {
+                print $vs_control_box;
+            }
 ?>
 			<input type='hidden' name='movement_id' value='<?php print $vn_movement_id; ?>'/>
 		</form>

@@ -920,4 +920,19 @@ require_once(__CA_LIB_DIR__.'/core/Configuration.php');
 		return null;
 	}
 	# ------------------------------------------------------------------------------------------------
+	function caShowControlBox($request, $config, $position) {
+		$control_box_position = $config->get('control_box_position');
+
+		if ($control_box_position == 'both') {
+			if ($request->isAjax()) {
+				return $position == 'top';
+			}
+			return true;
+		}
+		if ($control_box_position == $position) {
+			return true;
+		}
+		return false;
+	}
+	# ------------------------------------------------------------------------------------------------
 ?>
