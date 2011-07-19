@@ -1,0 +1,1 @@
+alter table ca_entity_labels modify column type_id int unsigned null;

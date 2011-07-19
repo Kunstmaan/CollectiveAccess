@@ -1,0 +1,1 @@
+alter table ca_lists modify column list_code varchar(100) not null;

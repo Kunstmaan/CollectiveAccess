@@ -1,0 +1,1 @@
+alter table ca_metadata_type_restrictions add column settings longtext not null;

@@ -1,0 +1,1 @@
+create unique index u_locale on ca_object_labels(locale_id, is_preferred, object_id);

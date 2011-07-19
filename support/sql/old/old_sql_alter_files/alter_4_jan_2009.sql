@@ -1,0 +1,1 @@
+ALTER TABLE ca_metadata_type_restrictions CHANGE COLUMN template_element_id restriction_id int unsigned not null auto_increment;

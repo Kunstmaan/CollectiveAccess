@@ -1,0 +1,82 @@
+We would like to thank the following people for supporting the CollectiveAccess
+project with suggestions, logistics, advice and/or code:
+
+Carol Hill-Albert
+David Arnold
+Detlev Balzer
+Nora Bynum
+Fernando Castro
+David Cigánek
+Nicole Cho
+Cara Conklin-Wingfield
+Charles Denson
+Matt Donadio
+Ryan Donaldson
+Michal Frankl
+Bob Freeman
+David Henry
+Seth van Hooland
+Karin Kierstead
+Jürgen Keiper
+Nathan Kemler
+Ian Kerrigan
+Dr. Paul Klimpel
+Adina Langer
+Alison Langmead
+Kara Van Malssen
+Gautier Michelin
+Tiffany Nixon
+Daan Poron
+Dr. Rainer Rother
+Steven Schwinghammer
+Judy Scotchmoor
+Karan Sheldon
+Marco Solari
+Bram Wiercx
+Roger Williams (1603 - 1683)
+
+We would also like to cite the following projects whose code is included in the CollectiveAccess distribution:
+
+jQuery (http://www.jQuery.com)
+getid3 media format metadata parser library (http://getid3.org)
+Drupal Unicode functions (http://www.drupal.org)
+Archive_TAR PEAR module (http://pear.php.net)
+Zend Framework (http://framework.zend.com)
+SWFObject v2.1 (http://code.google.com/p/swfobject)
+JIT (http://thejit.org)
+DejaVu Fonts (http://dejavu.sourceforge.net/)
+JPlayer (http://www.happyworm.com/jquery/jplayer/)
+VideoJS (http://videojs.com/)
+FlowPlayer (http://www.flowplayer.org)
+CKEditor (http://www.ckeditor.org)
+HTMLpurifier (http://htmlpurifier.org)
+PHP QR Code (http://phpqrcode.sourceforge.net)
+HTML2PDF (http://html2pdf.fr)
+
+We would like to thank the following organizations for helping to make CollectiveAccess possible:
+
+The Coney Island History Project, Brooklyn, NY, USA
+The Deutsche-Kinemathek - Museum für Film und Fernsehen, Berlin, Germany
+Kulturstiftung des Bundes/German Federal Cultural Foundation
+Bundeszentrale für politische Bildung/German Center for Political Study
+The Durst Organization, New York, NY, USA
+Institute of Museum and Library Services (USA)
+New York State Council on the Arts (USA)
+The New York City Department of Cultural Affairs (USA)
+The National September 11th Memorial and Museum, New York, NY, USA
+The Parrish Art Museum, Southampton, NY, USA
+The Brooklyn Academy of Music, NY, USA
+The New Museum for Contemporary Art, NY, USA
+The Academy of Motion Picture Arts and Sciences, Los Angeles, CA, USA
+The Historical Society of Pennsylvania, Philadelphia, PA, USA
+The Roundabout Theater Company, New York, NY, USA
+Art Preservation Services, New York, NY, USA
+Night Kitchen Interactive, Philadelphia, PA, USA
+The Jewish Museum in Prague, Czech Republic
+The Missouri History Museum, St. Louis, MO, USA
+University of California Museum of Paleontology, Berkeley, CA, USA
+Northeast Historic Film, Bucksport, ME, USA
+The Isamu Noguchi Foundation and Garden Museum, Long Island City, NY, USA
+Pier 21 - Canada's Immigration Museum, Halifax, NS, Canada
+The Association of Nova Scotia Museums, Halifax, NS, Canada
+FARO, Brussels, Belgium

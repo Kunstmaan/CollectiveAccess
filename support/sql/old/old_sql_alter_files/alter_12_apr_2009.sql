@@ -1,0 +1,1 @@
+ALTER TABLE ca_metadata_element_labels ADD COLUMN description text not null;

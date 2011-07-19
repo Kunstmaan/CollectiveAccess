@@ -1,0 +1,1 @@
+ALTER TABLE ca_list_items DROP COLUMN hier_item_id;

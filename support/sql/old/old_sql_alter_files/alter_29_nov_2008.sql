@@ -1,0 +1,1 @@
+ALTER TABLE ca_object_labels DROP INDEX u_locale;

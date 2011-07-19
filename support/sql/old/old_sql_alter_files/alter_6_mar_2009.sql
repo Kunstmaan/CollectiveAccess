@@ -1,0 +1,1 @@
+alter table ca_places modify column type_id int unsigned null;

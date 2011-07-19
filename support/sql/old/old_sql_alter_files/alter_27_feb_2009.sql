@@ -1,0 +1,1 @@
+ALTER TABLE ca_object_lots ADD COLUMN source_info longtext not null;

@@ -1,0 +1,1 @@
+ALTER TABLE ca_sets ADD COLUMN type_id int unsigned not null references ca_list_items(item_id);

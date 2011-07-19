@@ -1,0 +1,1 @@
+alter table ca_editor_uis modify column user_id int unsigned null;

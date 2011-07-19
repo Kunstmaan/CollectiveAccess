@@ -1,0 +1,1 @@
+alter table ca_metadata_elements CHANGE COLUMN rules settings longtext not null;

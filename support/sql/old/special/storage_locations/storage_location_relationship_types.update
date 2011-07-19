@@ -1,0 +1,34 @@
+add = {
+	relationship_types = {
+		ca_objects_x_storage_locations = {
+			types = {
+				related = {
+					is_default = 1,
+					preferred_labels = {
+						en_US = {
+							typename = is located at,
+							typename_reverse = is location of
+						}
+					},
+					subtype_left = ,
+					subtype_right = 
+				}
+			}
+		},
+		ca_object_lots_x_storage_locations = {
+			types = {
+				related = {
+					is_default = 1,
+					preferred_labels = {
+						en_US = {
+							typename = is located at,
+							typename_reverse = is location of
+						}
+					},
+					subtype_left = ,
+					subtype_right = 
+				}
+			}
+		}
+	}
+}
