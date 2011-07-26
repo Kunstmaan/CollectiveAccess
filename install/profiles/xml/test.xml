@@ -3189,9 +3189,6 @@
             <placement code="ca_attribute_external_link">
               <bundle>ca_attribute_external_link</bundle>
             </placement>
-            <placement code="ca_entities">
-              <bundle>ca_entities</bundle>
-            </placement>
           </bundlePlacements>
         </screen>
         <screen idno="admin" default="0">
