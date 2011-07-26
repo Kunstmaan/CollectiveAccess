@@ -891,6 +891,8 @@
 		# ------------------------------------------------------------------
 		// get HTML form element bundle for metadata element
 		public function getAttributeHTMLFormBundle($po_request, $ps_form_name, $pm_element_code_or_id, $ps_placement_code, $pa_bundle_settings, $pa_options) {
+            global $g_ui_locale;
+
 			if (!($t_element = $this->_getElementInstance($pm_element_code_or_id))) {
 				return false;
 			}
@@ -918,27 +920,28 @@
 			
 			foreach($va_element_set as $va_element) {
 				if ($va_element['datatype'] == 0) {		// containers are not active form elements
-					$va_elements_break_by_container[$va_element['element_id']] = (int)$va_element["settings"]["lineBreakAfterNumberOfElements"] ? (int)$va_element["settings"]["lineBreakAfterNumberOfElements"] : -1;
+					$va_elements_break_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']] = (int)$va_element["settings"]["lineBreakAfterNumberOfElements"] ? (int)$va_element["settings"]["lineBreakAfterNumberOfElements"] : -1;
 					
 					continue;
 				}
 				
 				$va_label = $this->getAttributeLabelAndDescription($va_element['element_id']);
 
-				if(!isset($va_elements_without_break_by_container[$va_element['parent_id']])){
-					$va_elements_without_break_by_container[$va_element['parent_id']] = 1;
+				if(!isset($va_elements_without_break_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']])){
+					$va_elements_without_break_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']] = 1;
 				} else {
-					$va_elements_without_break_by_container[$va_element['parent_id']] += 1;
+					$va_elements_without_break_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']] += 1;
 				}
 
-				if($va_elements_without_break_by_container[$va_element['parent_id']] == $va_elements_break_by_container[$va_element['parent_id']]+1){
-					$va_elements_without_break_by_container[$va_element['parent_id']] = 1;
-					$vs_br = "</td></tr></table><table class=\"attributeListItem\" cellpadding=\"0px\" cellspacing=\"0px\"><tr><td class=\"attributeListItem\">";
+				if($va_elements_without_break_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']] == $va_elements_break_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']]+1){
+					$va_elements_without_break_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']] = 1;
+					// I have no idea what this is used for, but this realy fucks the layout up
+					// $vs_br = "</td></tr></table><table class=\"attributeListItem\" cellpadding=\"0px\" cellspacing=\"0px\"><tr><td class=\"attributeListItem\">";
 				} else {
 					$vs_br = "";
 				}
 
-				$va_elements_by_container[$va_element['parent_id']][] = $vs_br.ca_attributes::attributeHtmlFormElement($va_element, array(
+				$va_elements_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']][] = $vs_br.ca_attributes::attributeHtmlFormElement($va_element, array(
 					'label' => (sizeof($va_element_set) > 1) ? $va_label['name'] : '',
 					'description' => $va_label['description'],
 					't_subject' => $this,

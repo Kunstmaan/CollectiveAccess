@@ -58,6 +58,7 @@
 			<xs:enumeration value="Occurrence"/>
 			<xs:enumeration value="Taxonomy"/>
 			<xs:enumeration value="InformationService"/>
+			<xs:enumeration value="Relationship"/>
 		</xs:restriction>
 	</xs:simpleType>
 

@@ -75,7 +75,7 @@
                         <table class="caListItem">
                                 <tr>
                                         <td>
-<input type="text" size="40" value="Type the first few characters here"
+<input type="text" size="40" 
         <?php if($RefOnly) {
 		print " readonly='readonly' ";
 		print " name='".$vs_id_prefix."_readonly{n}' "; 
@@ -95,7 +95,14 @@
 <?php if(!$RefOnly) { ?>
                                                 <a href="#" class="caDeleteItemButton"><?php print caNavIcon($this->request, __CA_NAV_BUTTON_DEL_BUNDLE__); ?></a>
 <?php } ?>
-                                                <a href="<?php print urldecode(caEditorUrl($this->request, $item_table_name, $item_primary_key)).$type_id_url_append?>" class="caEditItemButton" id="<?php print $vs_id_prefix; ?>_edit_related_{n}"><?php print caNavIcon($this->request, __CA_NAV_BUTTON_GO__); ?></a>
+                                                <a style="display: none;" href="<?php print urldecode(caEditorUrl($this->request, $item_table_name, $item_primary_key)).$type_id_url_append?>" class="caEditItemButton" id="<?php print $vs_id_prefix; ?>_edit_related_{n}"><?php print caNavIcon($this->request, __CA_NAV_BUTTON_GO__); ?></a>
+												<script type='text/javascript'>
+														jQuery(document).ready(function() {
+															if('<?php print $item_primary_key?>' ==  parseInt('<?php print $item_primary_key?>')) {
+																jQuery("#<?php print $vs_id_prefix; ?>_edit_related_{n}").show();
+															}
+														});
+												</script>
 
                                         </td>
                                 </tr>
