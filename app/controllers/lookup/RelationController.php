@@ -118,7 +118,7 @@ class RelationController extends ActionController {
                         }
                     }
                     $entity_id = $result->get('ca_entities.entity_id');
-                    $va_items[$entity_id]= array('type_id'=>$result->get('item_type_id'),'_display' => htmlspecialchars($result->get('displayname'), ENT_COMPAT, 'UTF-8'), 'idno' => $result->get('idno'), 'parent_id' => null);
+                    $va_items[$entity_id]= array($vs_label_table_name.'.type_id'=>$result->get($vs_label_table_name.'.type_id'),'_display' => htmlspecialchars($result->get($vs_label_table_name.'.displayname'), ENT_COMPAT, 'UTF-8'), 'idno' => $result->get('idno'), 'parent_id' => null);
                 }
                 $this->view->setVar('entity_list', $va_items);
                 return $this->render('ajax_entity_list_html.php');
