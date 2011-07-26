@@ -235,7 +235,11 @@ var caUI = caUI || {};
 			}
 		
 			// attach delete button
-			jQuery(this.container + " #" +this.itemID + templateValues.n + " ." + this.deleteButtonClassName).click(function() { that.deleteFromBundle(templateValues.n); return false; });
+			var relation_id = templateValues['relation_id'];
+			if(relation_id == null) {
+				relation_id = 1;
+			}
+			jQuery(this.container + " #" +this.itemID + templateValues.n + " ." + this.deleteButtonClassName).click(function() { that.deleteFromBundle(templateValues.n, null, relation_id); return false; });
 				
 			// set default locale for new
 			if (isNew) {
@@ -272,19 +276,28 @@ var caUI = caUI || {};
 			}
 			return this;
 		};
-		
-		that.deleteFromBundle = function(id) {
+
+		that.deleteFromBundle = function(id,invokeDeleteHandler) {
+			return that.deleteFromBundle(id,invokeDeleteHandler, 1);
+		}
+
+		that.deleteFromBundle = function(id,invokeDeleteHandler, relationid) {
+			//on delete is called before updating the state, as onDeleteItem(id) needs to access field values from DOM.
+			if(this.onDeleteItem && invokeDeleteHandler!=false) {
+				this.onDeleteItem(id);
+			}
+
 			jQuery(this.container + ' #' + this.itemID + id).remove();
-			jQuery(this.container).append("<input type='hidden' name='" + that.fieldNamePrefix + id + "_delete' value='1'/>");
-			
-			//this.decrementCount();
+			jQuery(this.container).append("<input type='hidden' name='" + that.fieldNamePrefix + id + "_delete' value='"+relationid+"'/>");
+
+			// this.decrementCount();
 			this.updateBundleFormState();
-			
+
 			that.showUnsavedChangesWarning(true);
-			
+
 			return this;
 		};
-			
+
 		that.getCount = function() {
 			return this.counter;
 		};

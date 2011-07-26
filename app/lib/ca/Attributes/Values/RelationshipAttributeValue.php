@@ -266,11 +266,13 @@
 			$va_rel_items = $t_subject->getRelatedItems($item_table_name);
 			$vs_prefix_stub = $vs_form_prefix.'_relationship_'.$vs_element->getPrimaryKey();
 
+			// We have to specify this because we want the count in the row, not the id of the object
+			$arr_index = 0;
 			foreach($va_rel_items as $va_rel_item) {
 				$t_subject->clearErrors();
-				$vn_id = $po_request->getParameter($vs_prefix_stub.'_id'.$va_rel_item['relation_id'], pString);
+				$vn_id = $po_request->getParameter($vs_prefix_stub.'_id'.$arr_index, pString);
 				if ($vn_id) {
-					$vn_type_id = $po_request->getParameter($vs_prefix_stub.'_type_id'.$va_rel_item['relation_id'], pInteger);
+					$vn_type_id = $po_request->getParameter($vs_prefix_stub.'_type_id'.$arr_index, pInteger);
 					$t_subject->editRelationship($item_table_name,$va_rel_item['relation_id'], $vn_id, $vn_type_id);
 					if ($t_subject->numErrors()) {
 						$po_request->addActionErrors($t_subject->errors(), 'RelationshipAttributeValue::saveElement');
@@ -278,14 +280,16 @@
 				} else {
 					// is it a delete key?
 					$t_subject->clearErrors();
-					if (($po_request->getParameter($vs_prefix_stub.'_'.$va_rel_item['relation_id'].'_delete', pInteger)) > 0) {
+					if (($po_request->getParameter($vs_prefix_stub.'_'.$arr_index.'_delete', pInteger)) > 0) {
+						$relationidvalue = $po_request->getParameter($vs_prefix_stub.'_'.$arr_index.'_delete', pInteger);
 						// delete!
-						$t_subject->removeRelationship($item_table_name, $va_rel_item['relation_id']);
+						$t_subject->removeRelationship($item_table_name, $relationidvalue);
 						if ($t_subject->numErrors()) {
 							$po_request->addActionErrors($t_subject->errors(), 'RelationshipAttributeValue::saveElement');
 						}
 					}
 				}
+				$arr_index++;
 			}
 
 	 		foreach($_REQUEST as $vs_key => $vs_value ) {
