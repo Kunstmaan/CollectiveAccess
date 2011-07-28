@@ -51,6 +51,7 @@
 					{
 						delay: 500,
 						speed: 150,
+                                                disableHI: true,
 						animation: { opacity: 'show' }
 					}
 				);
