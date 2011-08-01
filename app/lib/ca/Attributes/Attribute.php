@@ -54,6 +54,7 @@ require_once(__CA_LIB_DIR__.'/ca/Attributes/Values/PlaceAttributeValue.php');
 require_once(__CA_LIB_DIR__.'/ca/Attributes/Values/OccurrenceAttributeValue.php');
 require_once(__CA_LIB_DIR__.'/ca/Attributes/Values/TaxonomyAttributeValue.php');
 require_once(__CA_LIB_DIR__.'/ca/Attributes/Values/InformationServiceAttributeValue.php');
+require_once(__CA_LIB_DIR__.'/ca/Attributes/Values/KeywordsAttributeValue.php');
 require_once(__CA_LIB_DIR__.'/core/Configuration.php');
  
 	class Attribute {
