@@ -120,7 +120,15 @@
 			'label' => _t('Value delimiter'),
 			'validForRootOnly' => 1,
 			'description' => _t('Delimiter to use between multiple values when used in a display.')
-		)
+		),
+		'nullOption' => array(
+			'formatType' => FT_TEXT,
+			'displayType' => DT_FIELD,
+			'default' => '',
+			'width' => 50, 'height' => 1,
+			'label' => _t('Add null option to the list'),
+			'description' => _t('A null option will be shown at the top of the list containing the text that has been entered. (Default no null option will be shown)')
+		),
 	);
  
 	class ListAttributeValue extends AttributeValue implements IAttributeValue {
@@ -201,6 +209,10 @@
  		  */
  		public function htmlFormElement($pa_element_info, $pa_options=null) {
  			if (($pa_element_info['parent_id']) && ($pa_element_info['settings']['render'] == 'checklist')) { $pa_element_info['settings']['render'] = ''; }	// checklists can only be top-level
+ 			$va_settings = $this->getSettingValuesFromElementArray($pa_element_info, array('nullOption'));
+ 			if($va_settings['nullOption'] && $va_settings['nullOption'] != ''){
+ 				$pa_options['nullOption'] = $va_settings['nullOption'];
+ 			}
  			return ca_lists::getListAsHTMLFormElement($pa_element_info['list_id'], '{fieldNamePrefix}'.$pa_element_info['element_id'].'_{n}', array('id' => '{fieldNamePrefix}'.$pa_element_info['element_id'].'_{n}'), array_merge($pa_options, array('render' => isset($pa_element_info['settings']['render']) ? $pa_element_info['settings']['render'] : '', 'maxColumns' => $pa_element_info['settings']['maxColumns'])));
  		}
  		# ------------------------------------------------------------------

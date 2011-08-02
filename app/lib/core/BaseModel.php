@@ -919,10 +919,16 @@ class BaseModel extends BaseObject {
 						if ($vs_cur_value != $vm_value) {
 							$this->_FIELD_VALUE_CHANGED[$vs_field] = true;
 						}
-
+						if ('parent_id' == $vs_field) { // always index parent_id else we're unable to search on parent_id = 0
+							$this->_FIELD_VALUE_CHANGED[$vs_field] = true;
+						}
 						if (($vm_value !== "") || ($this->getFieldInfo($vs_field, "IS_NULL") && ($vm_value == ""))) {
 							if ($vm_value) {
 								$vm_orig_value = $vm_value;
+                                                                if (preg_match('/\|([\-]{0,1}\d+(\.\d+)?)/', $vm_value, $matches)) {
+                                                                    // If a pipe followed by a number was found, only keep the number after the first pipe...
+                                                                    $vm_value = $matches[1];
+                                                                }
 								$vm_value = preg_replace("/[^\d-.]+/", "", $vm_value); # strip non-numeric characters
 								if (!preg_match("/^[\-]{0,1}[\d.]+$/", $vm_value)) {
 									$this->postError(1100,_t("'%1' for %2 is not numeric", $vm_orig_value, $vs_field),"BaseModel->set()");
@@ -6427,7 +6433,7 @@ $pa_options["display_form_field_tips"] = true;
 							break;
 						case (DT_SELECT):
 							$vs_element = "<select name='".$pa_options["name"]."' ".$vs_js." id='".$pa_options["id"]."' {$vs_css_class_attr} {$vs_width_style_attr}>\n";
-							foreach(array("Yes" => 1, "No" => 0) as $vs_option => $vs_value) {
+							foreach(array(_t("Yes") => 1, _t("No") => 0) as $vs_option => $vs_value) {
 								$vs_selected = ($vs_value == $vm_field_value) ? "selected='selected'" : "";
 								$vs_element.= "<option value='$vs_value' $vs_selected>$vs_option</option>\n";
 							}
@@ -6722,7 +6728,7 @@ $pa_options["display_form_field_tips"] = true;
 					break;
 			}
 		}		
-		return true;
+		return $t_item_rel->getPrimaryKey();
 	}
 	# --------------------------------------------------------------------------------------------
 	/**

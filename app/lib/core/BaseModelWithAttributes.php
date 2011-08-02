@@ -891,7 +891,9 @@
 		# ------------------------------------------------------------------
 		// get HTML form element bundle for metadata element
 		public function getAttributeHTMLFormBundle($po_request, $ps_form_name, $pm_element_code_or_id, $ps_placement_code, $pa_bundle_settings, $pa_options) {
-			if (!($t_element = $this->_getElementInstance($pm_element_code_or_id))) {
+			global $g_ui_locale;
+
+                        if (!($t_element = $this->_getElementInstance($pm_element_code_or_id))) {
 				return false;
 			}
 			if ($t_element->get('parent_id')) { 
@@ -940,6 +942,7 @@
 
 				$va_elements_by_container[$va_element['parent_id']][] = $vs_br.ca_attributes::attributeHtmlFormElement($va_element, array(
 					'label' => (sizeof($va_element_set) > 1) ? $va_label['name'] : '',
+					'add_label' => (isset($pa_bundle_settings['add_label']) && isset($pa_bundle_settings['add_label'][$g_ui_locale]) && ($pa_bundle_settings['add_label'][$g_ui_locale])) ? $pa_bundle_settings['add_label'][$g_ui_locale] : '',
 					'description' => $va_label['description'],
 					't_subject' => $this,
 					'po_request' => $po_request,
@@ -987,7 +990,12 @@
 			// these are lists of associative arrays representing attributes that were rejected in a save() action
 			// during the current request. They are used to maintain the state of the form so the user can modify the
 			// input that caused the error
-			$o_view->setVar('failed_insert_attribute_list', $this->getFailedAttributeInserts($pm_element_code_or_id));
+			$failed_inserts = $this->getFailedAttributeInserts($pm_element_code_or_id);
+
+			// cleanup
+			$failed_inserts = $this->cleanUpFailedInserts($failed_inserts);
+
+			$o_view->setVar('failed_insert_attribute_list', $failed_inserts);
 			$o_view->setVar('failed_update_attribute_list', $this->getFailedAttributeUpdates($pm_element_code_or_id));
 		
 			// set the list of existing attributes for the current row
@@ -1000,6 +1008,27 @@
 			$o_view->setVar('settings', $pa_bundle_settings);
 			
 			return $o_view->render('ca_attributes.php');
+		}
+		# ------------------------------------------------------------------
+		public function cleanUpFailedInserts($failed_inserts) {
+			if(!is_array($failed_inserts)) {
+				 return $failed_inserts;
+			}
+
+			$res = array();
+			foreach($failed_inserts as $key => $value) {
+				$newvalue = $value;
+				if(is_array($value)) {
+					$newvalue = $this->cleanUpFailedInserts($value);
+				} else {
+					if(isset($value) && is_string($value) && strpos($value, 'replace_with_relation_id_for_') === 0) {
+						$prefill = explode("~", $value);
+						$newvalue = $prefill[1];
+					}
+				}
+				$res[$key] = $newvalue;
+			}
+			return $res;
 		}
 		# ------------------------------------------------------------------
 		/**
@@ -1066,7 +1095,14 @@
 				
 				// ... replace name of form element
 				$vs_form_element = str_replace('{fieldNamePrefix}'.$va_element['element_id'].'_{n}', str_replace('.', '_', $this->tableName().'.'.$va_element['element_code']), $vs_form_element);
-				
+
+				// also escape autocomplete fields
+				$vs_form_element = str_replace('{fieldNamePrefix}'.$va_element['element_id'].'_autocomplete{n}', str_replace('.', '_', $this->tableName().'.'.$va_element['element_code']).'_autocomplete', $vs_form_element);
+				$vs_form_element = str_replace('{fieldNamePrefix}'.$va_element['element_id'].'_link{n}', str_replace('.', '_', $this->tableName().'.'.$va_element['element_code']).'_link', $vs_form_element);
+				// Collection attribute specific
+				$vs_form_element = str_replace('coll_'.$va_element['element_id'].'_autocomplete{n}', 'coll_'.$va_element['element_id'].'_autocomplete', $vs_form_element);
+				$vs_form_element = str_replace('coll_'.$va_element['element_id'].'_autocomplete{n}', 'coll_'.$va_element['element_id'].'_autocomplete', $vs_form_element);
+
 				$va_elements_by_container[$va_element['parent_id'] ? $va_element['parent_id'] : $va_element['element_id']][] = $vs_form_element;
 				//if the elements datatype returns true from renderDataType, then force render the element
 				if(Attribute::renderDataType($va_element)) {
