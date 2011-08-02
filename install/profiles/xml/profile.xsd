@@ -62,6 +62,7 @@
 			<xs:enumeration value="Keywords"/>
 			<xs:enumeration value="Entity"/>
 			<xs:enumeration value="Collection"/>
+			<xs:enumeration value="ContainerableRelationship"/>
 		</xs:restriction>
 	</xs:simpleType>
 

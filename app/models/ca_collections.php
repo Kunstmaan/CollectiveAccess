@@ -54,7 +54,7 @@ BaseModel::$s_ca_models_definitions['ca_collections'] =  array(
 				'FIELD_TYPE' => FT_NUMBER, 'DISPLAY_TYPE' => DT_OMIT, 
 				'DISPLAY_WIDTH' => 10, 'DISPLAY_HEIGHT' => 1,
 				'IS_NULL' => true, 
-				'DEFAULT' => '',
+				'DEFAULT' => '0',
 				'LABEL' => 'Parent id', 'DESCRIPTION' => 'Identifier for parent of collection'
 		),
 		'locale_id' => array(
