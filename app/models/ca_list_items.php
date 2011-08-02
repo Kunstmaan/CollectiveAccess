@@ -296,7 +296,7 @@ class ca_list_items extends BundlableLabelableBaseModelWithAttributes implements
 	# ------------------------------------------------------
 	# ID numbering
 	# ------------------------------------------------------
-	protected $ID_NUMBERING_ID_FIELD = 'idno';				// name of field containing user-defined identifier
+	// protected $ID_NUMBERING_ID_FIELD = 'idno';				// name of field containing user-defined identifier
 	protected $ID_NUMBERING_SORT_FIELD = 'idno_sort';		// name of field containing version of identifier for sorting (is normalized with padding to sort numbers properly)
 	protected $ID_NUMBERING_CONTEXT_FIELD = 'list_id';		// name of field to use value of for "context" when checking for duplicate identifier values; if not set identifer is assumed to be global in scope; if set identifer is checked for uniqueness (if required) within the value of this field
 	
