@@ -198,16 +198,35 @@ class RelationController extends ActionController {
                         continue;
                     }
                 }
-                $va_preferred_label_locales = $qr_res->get($vs_label_table_name.'.locale_id', array('return_values_where' => array('field' => 'is_preferred', 'value' => 1)));
-                $va_preferred_labels = $qr_res->get($vs_label_table_name.'.'.$vs_label_display_field_name, array('return_values_where' => array('field' => 'is_preferred', 'value' => 1)));
+/*
+                $va_preferred_label_locales = $qr_res->get($vs_label_table_name.'.locale_id', array('returnAsArray' => true));
+                $va_preferred_labels = $qr_res->get($vs_label_table_name.'.'.$vs_label_display_field_name, array('returnAsArray' => true));
+                
                 $vn_i = 0;
                 foreach($va_preferred_label_locales as $vn_locale_id) {
                     $search_label = $va_preferred_labels[$vn_i];
                     //only add items where the preferred label starts with the ps_query
                     if(substr(strtolower($search_label),0,strlen($ps_query)) == strtolower($ps_query)) {
-                        $va_items[$qr_res->get($vs_label_table_name.'.'.$vs_pk)][$vn_locale_id] = array($vs_label_table_name.'.type_id' => $qr_res->get('type_id'), 'displayname' => htmlspecialchars($va_preferred_labels[$vn_i], ENT_COMPAT, 'UTF-8'), 'idno' => $qr_res->get('idno'), 'parent_id' => $qr_res->get('parent_id'), 'table_name' => $this->ops_table_name);
+                        $va_items[$qr_res->get($vs_label_table_name.'.'.$vs_pk)][$vn_locale_id] = array($vs_label_table_name.'.type_id' => $qr_res->get('type_id'), '_display' => htmlspecialchars($va_preferred_labels[$vn_i], ENT_COMPAT, 'UTF-8'), 'idno' => $qr_res->get('idno'), 'parent_id' => $qr_res->get('parent_id'), 'table_name' => $this->ops_table_name);
                     }
                     $vn_i++;
+                    if ($vn_parent_id = $qr_res->get($vs_hier_parent_id_fld)) {
+                        $va_parent_ids[] = $vn_parent_id;
+                    }
+                }
+*/
+                $va_labels = $qr_res->get($vs_label_table_name.'.'.$vs_label_display_field_name, array('returnAsArray' => true));
+                $va_is_preferred = $qr_res->get($vs_label_table_name.'.is_preferred', array('returnAsArray' => true));
+                $va_locales = $qr_res->get($vs_label_table_name.'.locale_id', array('returnAsArray' => true));
+
+                $vn_num_locales = sizeof($va_locales);
+                for($vn_i=0; $vn_i < $vn_num_locales; $vn_i++) {
+                    if (!$va_is_preferred[$vn_i]) { continue; }
+                    $search_label = $va_labels[$vn_i];
+                    //only add items where the preferred label starts with the ps_query
+                    if(substr(strtolower($search_label),0,strlen($ps_query)) == strtolower($ps_query)) {
+                        $va_items[$qr_res->get($vs_label_table_name.'.'.$vs_pk, array('preferredLabels' => true))][$vn_locale_id] = array($vs_label_table_name.'.type_id' => $qr_res->get('type_id'), '_display' => htmlspecialchars($va_labels[$vn_i], ENT_COMPAT, 'UTF-8'), 'idno' => $qr_res->get('idno'), 'parent_id' => $qr_res->get('parent_id'), 'table_name' => $this->ops_table_name);
+                    }
                     if ($vn_parent_id = $qr_res->get($vs_hier_parent_id_fld)) {
                         $va_parent_ids[] = $vn_parent_id;
                     }

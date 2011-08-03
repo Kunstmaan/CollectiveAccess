@@ -1497,6 +1497,7 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 			// look for newly created attributes; look for attributes to delete
 			$va_inserted_attributes = array();
 			$reserved_elements = array();
+			$reserved_attributes = array();
 			foreach($va_fields_by_type['attribute'] as $vs_placement_code => $vs_f) {
 				$vs_element_set_code = preg_replace("/^ca_attribute_/", "", $vs_f);
 				//does the attribute's datatype have a saveElement method - if so, use that instead
@@ -1511,8 +1512,27 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 				
 				$va_attributes_to_insert = array();
 				$va_attributes_to_delete = array();
+				$va_attributes_with_own_function = array();
 				$va_locales = array();
 				foreach($_REQUEST as $vs_key => $vs_val) {
+					if(preg_match('/'.$vs_placement_code.$vs_form_prefix.'_attribute_'.$vn_element_id.'_([\w\d\-_]+[^new])_((new_)*[\d]+|(deleterelation)*[\d]+)/', $vs_key, $va_matches)) {
+						$vs_attr_element_id = intval($va_matches[1]);
+						$vs_matchid = $va_matches[2];
+						$o_db = $this->getDb();
+						$qr_res = $o_db->query("SELECT element_code FROM ca_metadata_elements WHERE element_id = ?", $vs_attr_element_id);
+						if($qr_res->nextRow()) {
+							$attr_element = $this->_getElementInstance($qr_res->get('element_code'));
+							$attr_element_datatype = $attr_element->get('datatype');
+							$attribute = Attribute::getValueInstance($attr_element_datatype);
+							if(method_exists($attribute, 'doPreSaveAttribute')){
+								if($attribute->doPreSaveAttribute($this, $attr_element, $vs_placement_code.$vs_form_prefix, $po_request, $vs_matchid, $vs_f, $vn_element_id, $va_attributes_to_insert)) {
+									$va_attributes_with_own_function[$vs_attr_element_id] = true;
+									$reserved_attributes[] = $attribute;
+									continue;
+								}
+							}
+						}
+					}
 					// is it a newly created attribute?
 					if (preg_match('/'.$vs_placement_code.$vs_form_prefix.'_attribute_'.$vn_element_id.'_([\w\d\-_]+)_new_([\d]+)/', $vs_key, $va_matches)) { 
 						$vn_c = intval($va_matches[2]);
@@ -1573,7 +1593,7 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 						$this->clearErrors();
 						$vn_attribute_id = $o_attr->getAttributeID();
 						if (in_array($vn_attribute_id, $va_inserted_attributes)) { continue; }
-						if (in_array($vn_attribute_id, $va_attributes_to_delete)) { continue; }
+						if (array_key_exists($vn_attribute_id, $va_attributes_to_delete)) { continue; }
 						
 						$vn_element_set_id = $o_attr->getElementID();
 						
@@ -1598,6 +1618,7 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 							//$vn_element_id = $o_attr_val->getElementID();
 							$vn_element_id = $va_element_info['element_id'];
 							
+							if (array_key_exists($vn_element_id, $va_attributes_with_own_function)) { continue; }
 							$vs_k = $vs_placement_code.$vs_form_prefix.'_attribute_'.$vn_element_set_id.'_'.$vn_element_id.'_'.$vn_attribute_id;
 							if (isset($_FILES[$vs_k]) && ($va_val = $_FILES[$vs_k])) {
 								if ($va_val['size'] > 0) {	// is there actually a file?
@@ -1680,7 +1701,23 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 				$res_datatype->saveElement($this,$res_element,$vs_form_prefix,$po_request);
 			}
 		}
-		
+
+		if (isset($reserved_attributes) && is_array($reserved_attributes)) {
+			foreach($reserved_attributes as $attribute) {
+				if(method_exists($attribute,'doPostSaveAttribute')){
+					$attribute->doPostSaveAttribute($this, $vs_form_prefix, $po_request);
+				}
+			}
+			$this->update();
+		}
+
+		// clean up !! remove placeholders
+        /*
+		$o_db = $this->getDb();
+		$query = "UPDATE ca_attribute_values SET value_longtext1 = NULL WHERE value_longtext1 like 'replace_with_relation_id_for_%' AND ca_attribute_values.attribute_id IN (SELECT attribute_id FROM ca_attributes WHERE ca_attributes.table_num = ".$this->tableNum()." AND ca_attributes.row_id = ".$this->getPrimaryKey().");";
+		$qr_res = $o_db->query($query);
+        */
+        
 		// save preferred labels
 		$vb_check_for_dupe_labels = $this->_CONFIG->get('allow_duplicate_labels_for_'.$this->tableName()) ? false : true;
 		if (is_array($va_fields_by_type['preferred_label'])) {

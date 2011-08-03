@@ -488,7 +488,10 @@ class SearchResult extends BaseObject {
 				$vb_is_get_for_labels = true;
 			}
 		}
-		
+		// Hack to only get item_id for preferred labels
+        if (isset($pa_options['preferredLabels'])) {
+            $vb_get_preferred_labels_only = (bool)$pa_options['preferredLabels'];
+        }
 		if ($va_path_components['num_components'] >= 2) {
 			switch($va_path_components['field_name']) {
 				case 'parent':
