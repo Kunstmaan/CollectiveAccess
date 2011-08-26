@@ -32,7 +32,9 @@
     $display_field 		= $this->getVar('label_display_field');
     $pa_options 		= $this->getVar('pa_options');
     $rel_types 			= $this->getVar('relationship_types_by_sub_type');
-    
+
+    $va_failed_inserts = ($this->getVar('failed_insert_attribute_list') && $this->getVar('initialValues'))? '' :  $this->getVar('failed_insert_attribute_list');
+
     $RefOnly = null;
     if(array_key_exists('RefOnly',$pa_options)) {
 		if($pa_options['RefOnly']>0) $RefOnly = $pa_options['RefOnly'];
@@ -105,6 +107,11 @@
 												</script>
 
                                         </td>
+                                        <td rowspan="1" class="objectRepresentationListItemImage">
+                                            <span id="<?php print $vs_id_prefix; ?>_newitemlink{n}" style="display:none;">
+                                            </span>
+                                        </td>
+
                                 </tr>
 
                         </table>
@@ -116,28 +123,49 @@
 
                 </div>
 <?php if(!$RefOnly) { ?>
-                <div class='button labelInfo caAddItemButton'><a href='#'><?php print caNavIcon($this->request, __CA_NAV_BUTTON_ADD__); ?> <?php print _t("Add " ); ?></a></div>
+<?php
+	if (!$vs_add_label = $pa_options['add_label']) {
+		$vs_add_label =  _t("Add " );
+	}
+?>
+                <div class='button labelInfo caAddItemButton'><a href='#'><?php print caNavIcon($this->request, __CA_NAV_BUTTON_ADD__); ?> <?php print $vs_add_label; ?></a></div>
 <?php } ?>
         </div>
 </div>
 			
 <script type="text/javascript">
+	var <?php print $vs_id_prefix; ?>_overlay = false;
+<?php
+	if($pa_options['enableQuickAdd']){
+		$quickAddItemTypes = $pa_options['quickAddItemTypes'];
+?>
+			<?php print $vs_id_prefix; ?>_overlay = {
+				inputid : 'autocomplete',
+				linkid : 'newitemlink',
+				textfieldname : '<?php print $pa_options['textfieldname']; ?>',
+				overlayurl : '<?php print $pa_options['overlay_base_url']; ?>',
+				idfieldname : '<?php print $pa_options['idfieldname']; ?>',
+				availableTypes : <?php print json_encode($quickAddItemTypes) ?>,
+				newtext : '<?php print _t("new %1", $pa_options['singular_name']); ?>'
+			};
+<?php } ?>
+
+	var <?php print $vs_id_prefix; ?>_options = {
+      fieldNamePrefix: '<?php print $vs_id_prefix; ?>_',
+      templateValues: ['<?php print $display_field?>', 'type_id', 'id'],
+      forceNewValues: <?php print json_encode($va_failed_inserts); ?>,
+      initialValues: <?php print json_encode($initialValues); ?>,
+      itemID: '<?php print $vs_id_prefix; ?>Item_',
+      templateClassName: 'caItemTemplate',
+      itemListClassName: 'caItemList',
+      addButtonClassName: 'caAddItemButton',
+      deleteButtonClassName: 'caDeleteItemButton',
+      showEmptyFormsOnLoad: 1,
+      relationshipTypes: <?php print json_encode($this->getVar('relationship_types_by_sub_type')); ?>,
+      autocompleteUrl: '<?php print caNavUrl($this->request, 'lookup', 'Relation', 'Get', array('element'=>$pa_options['element_id'],'item'=>$item_table_name)); ?>',
+      overlay : <?php print $vs_id_prefix; ?>_overlay
+	};
 	jQuery(document).ready(function() {
-        caUI.initRelationBundle('#<?php print $vs_id_prefix.$item_table_num.'_rel'; ?>', {
-                fieldNamePrefix: '<?php print $vs_id_prefix; ?>_',
-                templateValues: ['<?php print $display_field?>', 'type_id', 'id'],
-                initialValues: <?php print json_encode($initialValues); ?>,
-                itemID: '<?php print $vs_id_prefix; ?>Item_',
-                templateClassName: 'caItemTemplate',
-                itemListClassName: 'caItemList',
-                addButtonClassName: 'caAddItemButton',
-                deleteButtonClassName: 'caDeleteItemButton',
-                showEmptyFormsOnLoad: 1,
-                relationshipTypes: <?php print json_encode($this->getVar('relationship_types_by_sub_type')); ?>,
-                autocompleteUrl: '<?php print caNavUrl($this->request, 'lookup', 'Relation', 'Get', array('element'=>$pa_options['element_id'],'item'=>$item_table_name)); ?>'
-        });
-    });
+	    caUI.initRelationBundle('#<?php print $vs_id_prefix.$item_table_num.'_rel'; ?>', <?php print $vs_id_prefix; ?>_options);
+	});
 </script>
-
-
-

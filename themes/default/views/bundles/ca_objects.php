@@ -62,6 +62,10 @@
 						
 						<a href="<?php print urldecode(caEditorUrl($this->request, 'ca_objects', '{object_id}')); ?>" class="caEditItemButton" id="<?php print $vs_id_prefix; ?>_edit_related_{n}"><?php print caNavIcon($this->request, __CA_NAV_BUTTON_GO__); ?></a>
 					</td>
+					<td>
+						<span id="<?php print $vs_id_prefix; ?>_newitemlink{n}" style="display:none;">
+						</span>
+					</td>
 				</tr>
 			</table>
 		</div>
@@ -88,6 +92,15 @@
 			hideOnNewIDList: ['<?php print $vs_id_prefix; ?>_edit_related_'],
 			showEmptyFormsOnLoad: 1,
 			autocompleteUrl: '<?php print caNavUrl($this->request, 'lookup', 'Object', 'Get', array()); ?>',
+			overlay : {
+				inputid : 'autocomplete',
+				linkid : 'newitemlink',
+				textfieldname : 'Prefname',
+				overlayurl : '<?php print caNavUrl($this->request, 'editor/objects', 'ObjectEditor', 'Edit').'/type_id/'; ?>',
+				idfieldname : 'object_id',
+				availableTypes : <?php print json_encode($this->getVar('quickAddItemTypes')); ?>,
+				newtext : '<?php print _t("new %1", _t("object")); ?>'
+			},
 <?php
 	if ($t_subject->tableName() == 'ca_object_representations') {
 ?>

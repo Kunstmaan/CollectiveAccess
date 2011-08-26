@@ -1,0 +1,124 @@
+/* Style for labels on standard form fields (ie. no error) */
+.formLabel {
+	font-size:12px !important;
+	color: #134959 !important;
+	margin-bottom: 10px !important;
+	background-color:#EEEEEE !important;
+	padding-bottom:5px !important;
+	overflow:hidden !important;
+}
+
+.labelLocale {
+	font-size:12px !important;
+}
+
+/* form field tooltips */
+#tooltip {
+	opacity: 0.95 !important;	/* opacity: 0.85;*/
+}
+#tooltip.tooltipFormat {
+	height: auto !important;
+	width: auto !important;
+	max-height:320px;/* height: 135px;*/
+	max-width:300px;/*	width: 210px; */
+	opacity: 0.9; /* opacity: 0.8; */
+	background-image: none;
+	background-color: #FFFFFF;/*background: url('../graphics/backgrounds/tooltip_box.png');*/
+	border:1px ridge #AAAAAA;
+	font-size: 10pt;
+}
+#tooltip.tooltipFormat h3 {
+	font-size: 12pt;
+}
+#tooltip.tooltipFormat div { width: auto !important; height: auto !important; text-align: left; margin: 0px; overflow: hidden;}
+
+/*** LABEL FORM ELEMENTS ***/
+
+.bundleContainer{
+	overflow:hidden;
+}
+.labelInfo {
+	/*border-bottom: 3px solid #FFFFFF;*/
+	margin: 0px;
+	padding: 0px 20px 0px 5px;
+	border: none;
+}
+
+/*** ATTRIBUTES FORM ELEMENTS ***/
+table.attributeListItem {
+	max-width:730px;
+}
+
+.caItemList{padding-right:0px;}
+/*.caDeleteItemButton{position:absolute;}*/
+
+input#idno_collection_code{display:none;}
+select#status{min-width:250px; clear:both;}
+
+/*  Identificate */
+input#ca_attribute_other_numberObjectEditorForm_attribute_39_40_new_0{margin-right:200px;}
+select#ca_attribute_other_numberObjectEditorForm_attribute_38_39_new_0, select#ca_attribute_other_numberObjectEditorForm_attribute_38_39_5,
+select#ca_attribute_other_numberObjectEditorForm_attribute_37_38_new_0
+{min-width:250px; clear:both;}
+
+input#ObjectEditorForm_relationship_30_autocompletenew_0{width:500px;}
+
+select#ca_attribute_production_makerObjectEditorForm_attribute_44_47_new_0{min-width:250px; clear:both;}
+/* Description */
+
+div#ca_attribute_dimensionsObjectEditorForm_attribute_19Item_new_0 .formLabel{ float:left; padding-right:5px;}
+input#ca_attribute_dimensionsObjectEditorForm_attribute_19_20_new_0{margin-right:200px;}
+div#description_timefragmentObjectEditorForm_attribute_27 .formLabel{ float:left; padding-right:5px;}
+
+input#description_timefragmentObjectEditorForm_attribute_27_28_new_0{margin-right:200px;}
+
+/*  Management */
+select#ca_attribute_management_acquisitionObjectEditorForm_attribute_44_46_new_0{min-width:250px; clear:both;}
+select#ca_attribute_management_copyrightObjectEditorForm_attribute_52_54_new_0{min-width:250px; clear:both;}
+input#description_timefragmentObjectEditorForm_attribute_29_30_new_0 {margin-right:100px;}
+
+/* Production */
+select#ca_attribute_production_makerObjectEditorForm_attribute_40_43_new_0{min-width:250px; clear:both;}
+
+/* Location */
+select#ca_attribute_location_accessObjectEditorForm_attribute_123_124_new_0{min-width:300px; clear:both;}
+
+/* State of object */
+select#ca_attribute_completeness_of_objectObjectEditorForm_attribute_106_108_new_0{min-width:250px; clear:both;}
+select#ca_attribute_state_of_objectObjectEditorForm_attribute_102_104_new_0{min-width:250px; clear:both;}
+
+/*	overlay for relationbundle	*/
+#onthefly_overlay {
+	width:900px;
+	height: 620px;
+	display:none;
+	overflow: hidden;
+
+	background-image:url(../graphics/backgrounds/overlay.png);
+}
+
+#onthefly_overlay div.close {
+	background:url(../graphics/buttons/close.png) no-repeat;
+	position:absolute;
+	top:10px;
+	right:10px;
+	width:36px;
+	height:36px;
+	cursor:pointer;
+}
+
+#onthefly_overlay_content {
+	position: absolute;
+	top: 40px;
+	left: 36px;
+	width: 830px;
+	height: 530px;
+	overflow: auto;
+	text-align: center;
+}
+
+span.loading{
+    padding: 0 0 0 20px;
+    background: url(../graphics/icons/indicator.gif) no-repeat 0 50%;
+}
+/*********************************************/

@@ -137,6 +137,22 @@ $_ca_editor_ui_bundle_placement_settings = array(		// global
 			'default' => '',
 			'label' => _t('Descriptive text for bundle.'),
 			'description' => _t('Descriptive text to use for help for bundle. Will override descriptive text set for underlying metadata element, if set.')
+		),
+		'quickAddItemTypes' => array(
+			'formatType' => FT_TEXT,
+			'displayType' => DT_FIELD,
+			'default' => '',
+			'width' => 50, 'height' => 1,
+			'label' => _t('Preferred type'),
+			'description' => _t('The preferred item type that can be created on the fly.')
+		),
+		'enableQuickAdd' => array(
+			'formatType' => FT_NUMBER,
+			'displayType' => DT_CHECKBOXES,
+			'default' => 0,
+			'width' => 1, 'height' => 1,
+			'label' => _t('Enable overlay creations'),
+			'description' => _t('Enable creating items on the fly.')
 		)
 	);
 

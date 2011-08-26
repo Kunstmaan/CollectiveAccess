@@ -74,6 +74,22 @@
 			'width' => 5, 'height' => 1,
 			'label' => _t('Right Item Type'),
 			'description' => _t('The type name for the right hand item - for example, individual is a typename for ca_entities')
+		),
+		'quickAddItemTypes' => array(
+			'formatType' => FT_TEXT,
+			'displayType' => DT_FIELD,
+			'default' => '',
+			'width' => 50, 'height' => 1,
+			'label' => _t('Preferred type'),
+			'description' => _t('The preferred item type that can be created on the fly.')
+		),
+		'enableQuickAdd' => array(
+			'formatType' => FT_NUMBER,
+			'displayType' => DT_CHECKBOXES,
+			'default' => 0,
+			'width' => 1, 'height' => 1,
+			'label' => _t('Enable overlay creations'),
+			'description' => _t('Enable creating items on the fly.')
 		)
 	);
 
@@ -118,7 +134,7 @@
  		// containing a row from the ca_metadata_elements table
  		// $pa_options is an optional associative array of form options; these are type-specific.
  		public function htmlFormElement($pa_element_info, $pa_options=null) {
-  			$va_settings = $this->getSettingValuesFromElementArray($pa_element_info, array('RelTable', 'RelType', 'CreateLink', 'RightItemType','RefOnly'));
+  			$va_settings = $this->getSettingValuesFromElementArray($pa_element_info, array('RelTable', 'RelType', 'CreateLink', 'RightItemType','RefOnly','quickAddItemTypes','enableQuickAdd'));
   			$t_subject = $pa_options['t_subject'];
  			$rel_table  = $t_subject->getAppDatamodel()->getTableInstance($va_settings['RelTable']);
  			$right_table_name = $rel_table->getRightTableName();
@@ -142,6 +158,7 @@
  			$t_item = $t_subject->getAppDatamodel()->getTableInstance($item_table_name);
    			$pa_options['RelType'] = $va_settings['RelType'];
    			$pa_options['RefOnly'] = $va_settings['RefOnly'];
+   			$pa_options['enableQuickAdd'] = $va_settings['enableQuickAdd'];
    			$pa_options['element_id'] = $pa_element_info['element_id'];
    			$po_request = $pa_options['po_request'];
 			$ps_form_name = $pa_options['ps_form_name'].'_relationship_'.$pa_element_info['element_id'];
@@ -203,15 +220,72 @@
 				}
 			}
 
+			require_once(__CA_APP_DIR__.'/models/'.$right_table_name.'.php');
+			$vs_right_table_instance = new $right_table_name();
+			
+			$arr_overlay_url = caEditorUrl($pa_options['po_request'], $right_table_name, null, true);
+			$vs_overlay_url = caNavUrl($pa_options['po_request'], $arr_overlay_url['module'], $arr_overlay_url['controller'], $arr_overlay_url['action']).'/type_id/';
+			
+			$vs_label_display_field_name = $vs_right_table_instance->getLabelDisplayField();
+			$vs_singular_name = $vs_right_table_instance->getProperty('NAME_SINGULAR');
+
+	 		$arr_list_items = array();
+			// get all possible type codes
+			$ol_listcode = $vs_right_table_instance->getTypeListCode();
+			$t_list = new ca_lists();
+			if ($t_list->load(array('list_code' => $ol_listcode))) {
+				$arr_list_items = $t_list->getItemsForList($ol_listcode);
+			}
+			
+			$arr_new_list_items = array(); // to prevent dificulties in javascript 
+			if($quickAddItemTypes = $va_settings['quickAddItemTypes']){
+				foreach($quickAddItemTypes as $item_code) {
+					$arr_new_list_items[] = $arr_list_items[$this->getItemIDByIDNo($item_code, $pa_options['t_subject'])][1];
+				} 
+			}
+			else{
+				foreach ($arr_list_items as $key => $value){
+					$arr_new_list_items[] = $arr_list_items[$key][1];
+				}
+			}
+			
+ 			// hack to check for vocabulary_terms
+			if($right_table_name == 'ca_list_items' && strpos($va_settings['RelTable'], "vocabulary_terms")) {
+				$pa_options['onlyvoc'] = true;
+			}
+
+			$pa_options['quickAddItemTypes'] = $arr_new_list_items;
+ 		
+			$pa_options['idfieldname'] = $right_table_field;
+			$pa_options['textfieldname'] = $vs_label_display_field_name;
+			$pa_options['overlay_base_url'] = $vs_overlay_url;
+			$pa_options['singular_name'] = $vs_singular_name;
+      
 			$o_view->setVar('label_display_field',$rel_label_display_field);
 			$o_view->setVar('t_item',$t_item);
 			$o_view->setVar('initialValues', $va_initial_values);
 			$o_view->setVar('request', $po_request);
 			$o_view->setVar('pa_options',$pa_options);
-            $html = $o_view->render('relationship.php');
+
+			$vs_form_prefix = $pa_options['ps_form_name'];
+
+			$failed_inserts = $this->getAttributeValuesForFailedInsert($this, $pa_element_info, $vs_form_prefix, $po_request);
+			$o_view->setVar('failed_insert_attribute_list', $failed_inserts);
+
+      $html = $o_view->render('relationship.php');
 			return $html;
  		}
 
+    private function getItemIDByIDNo($item_code,$t_subject) {
+			$ca_list_items  = $t_subject->getAppDatamodel()->getTableInstance('ca_list_items');
+			$o_db = $t_subject->getDb();
+			$qr_res = $o_db->query("SELECT item_id FROM ca_list_items WHERE idno = ?",$item_code);
+			if($qr_res->nextRow()) {
+				$itemid = $qr_res->get('item_id');
+				return $itemid;
+	        }
+	        return 0;
+		}
 
 		private function getRelTypeByTypeCode($type_code,$t_subject) {
 			$ca_relationship_types  = $t_subject->getAppDatamodel()->getTableInstance('ca_relationship_types');
@@ -227,6 +301,27 @@
 			$ca_relationship_types->load(array_pop($type_ids));
 			return $ca_relationship_types;
 
+		}
+
+		public function getAttributeValuesForFailedInsert($t_subject,$vs_element,$vs_form_prefix,$po_request) {
+			$repopulate = Array();
+			$vs_prefix_stub = $vs_form_prefix.'_relationship_'.$vs_element[element_id];
+		    foreach($_REQUEST as $vs_key => $vs_value ) {
+		    if (!preg_match('/^'.$vs_prefix_stub.'_idnew_([\d]+)/', $vs_key, $va_matches)) {continue; }
+				if($vn_new_id = $po_request->getParameter($va_matches[0], pString)) {
+					$vn_c = intval($va_matches[1]); //numbers items in array
+					$vn_new_type_id = $po_request->getParameter($vs_prefix_stub.'_type_idnew_'.$vn_c,pInteger); //type of relation
+					$vn_new_id = $po_request->getParameter($vs_prefix_stub.'_idnew_'.$vn_c, pInteger);
+					$vn_new_name = $po_request->getParameter($vs_prefix_stub.'_autocomplete_new_'.$vn_c, pString);
+
+					$repopulate[] =  array(
+					  "displayname" => $vn_new_name,
+					  "type_id" => $vn_new_type_id,
+					  "id" => $vn_new_id
+					);
+				}
+			}
+			return $repopulate;
 		}
 
 		public function saveElement($t_subject,$vs_element,$vs_form_prefix,$po_request) {
@@ -328,6 +423,29 @@
  			global $_ca_attribute_settings;
  			return $_ca_attribute_settings['RelationshipAttributeValue'];
  		}
+
+		public function getFailedAttributeInserts($pm_element_code_or_id) {
+			return $this->opa_failed_attribute_inserts[$pm_element_code_or_id];
+		}
+
+		public function cleanUpFailedInserts($failed_inserts) {
+			if(!is_array($failed_inserts)) {
+				return $failed_inserts;
+			}
+			$res = array();
+			foreach($failed_inserts as $key => $value) {
+				$newvalue = $value;
+				if(is_array($value)) {
+					$newvalue = $this->cleanUpFailedInserts($value);
+				} else {
+					if(isset($value) && is_string($value)) {
+						$newvalue = '';
+					}
+				}
+				$res[$key] = $newvalue;
+			}
+			return $res;
+		}
 
 		/**
 		 * Returns name of field in ca_attribute_values to use for sort operations

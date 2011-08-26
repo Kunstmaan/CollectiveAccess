@@ -306,6 +306,7 @@ class ContainerableRelationshipAttributeValue extends AttributeValue implements 
 							}
 						);
 		";
+        /*
         if ($va_settings['enableQuickAdd']) {
             $vs_element .= "
 						var id = '{n}';
@@ -323,6 +324,7 @@ class ContainerableRelationshipAttributeValue extends AttributeValue implements 
 						addNewOnTheFlyOverlay(id, overlayoptions);
 			";
         }
+        */
         $vs_element .= "
 						var deletebuttonclass = 'caDeleteItemButton';
 						var delfunction = null;

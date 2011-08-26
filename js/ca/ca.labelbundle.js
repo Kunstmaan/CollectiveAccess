@@ -42,7 +42,9 @@ var caUI = caUI || {};
 			labelListClassName: 'caLabelList',
 			addButtonClassName: 'caAddLabelButton',
 			deleteButtonClassName: 'caDeleteLabelButton',
-			
+
+			minRepeats: 1,
+			maxRepeats: 65535,
 			counter: 0
 		}, options);
 		
@@ -163,6 +165,17 @@ var caUI = caUI || {};
 						jQuery(this.container + " ." + this.addButtonClassName).hide();
 					} else {
 						jQuery(this.container + " ." + this.addButtonClassName).show(200);			
+					}
+					// Minimum repeats and multiple labels
+					if (this.getCount() <= this.minRepeats) {
+						jQuery(this.container + " ." + this.deleteButtonClassName).hide();
+					} else {
+						jQuery(this.container + " ." + this.deleteButtonClassName).show(200);
+					}
+					if (this.getCount() >= this.maxRepeats) {
+						jQuery(this.container + " ." + this.addButtonClassName).hide();
+					} else {
+						jQuery(this.container + " ." + this.addButtonClassName).show(200);
 					}
 					break;
 				default:

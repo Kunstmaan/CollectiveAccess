@@ -49,7 +49,7 @@
 			$va_form_elements = $t_object->getBundleFormHTMLForScreen($this->request->getActionExtra(), array(
 									'request' => $this->request, 
 									'formName' => 'ObjectEditorForm'));
-			
+
 			print join("\n", $va_form_elements);
 			
 			print $vs_control_box;

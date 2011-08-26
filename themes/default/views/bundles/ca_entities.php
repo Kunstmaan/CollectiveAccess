@@ -55,6 +55,10 @@
 						
 						<a href="<?php print urldecode(caEditorUrl($this->request, 'ca_entities', '{entity_id}')); ?>" class="caEditItemButton" id="<?php print $vs_id_prefix; ?>_edit_related_{n}"><?php print caNavIcon($this->request, __CA_NAV_BUTTON_GO__); ?></a>
 					</td>
+					<td>
+						<span id="<?php print $vs_id_prefix; ?>_newitemlink{n}" style="display:none;">
+						</span>
+					</td>
 				</tr>
 			</table>
 		</div>
@@ -64,7 +68,9 @@
 		<div class="caItemList">
 		
 		</div>
-		<div class='button labelInfo caAddItemButton'><a href='#'><?php print caNavIcon($this->request, __CA_NAV_BUTTON_ADD__); ?> <?php print $vs_add_label ? $vs_add_label : _t("Add relationship"); ?></a></div>
+		<div class='button labelInfo caAddItemButton'>
+      <a href='#'><?php print caNavIcon($this->request, __CA_NAV_BUTTON_ADD__); ?> <?php print $vs_add_label ? $vs_add_label : _t("Add relationship"); ?></a>
+    </div>
 	</div>
 </div>
 			
@@ -82,7 +88,16 @@
 			hideOnNewIDList: ['<?php print $vs_id_prefix; ?>_edit_related_'],
 			showEmptyFormsOnLoad: 1,
 			relationshipTypes: <?php print json_encode($this->getVar('relationship_types_by_sub_type')); ?>,
-			autocompleteUrl: '<?php print caNavUrl($this->request, 'lookup', 'Entity', 'Get', array()); ?>'
+			autocompleteUrl: '<?php print caNavUrl($this->request, 'lookup', 'Entity', 'Get', array()); ?>',
+			overlay : {
+				inputid : 'autocomplete',
+				linkid : 'newitemlink',
+				textfieldname : 'displayname',
+				overlayurl : '<?php print caNavUrl($this->request, 'editor/entities', 'EntityEditor', 'Edit').'/type_id/'; ?>',
+				idfieldname : 'entity_id',
+				availableTypes : <?php print json_encode($this->getVar('quickAddItemTypes')); ?>,
+				newtext : '<?php print _t("new %1", _t("entity")); ?>'
+			}
 		});
 	});
 </script>

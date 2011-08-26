@@ -54,6 +54,7 @@ var caUI = caUI || {};
 			onInitializeItem: null,
 			onItemCreate: null,	/* callback function when a bundle item is created */
 			onAddItem: null,
+			onDeleteItem: null,
 			incrementLocalesForNewBundles: true,
 			defaultValues: {},
 			
@@ -164,16 +165,34 @@ var caUI = caUI || {};
 			// assumes name of fields is:
 			// {fieldNamePrefix} + {fieldname} + {_} + {row id number}
 			var i;
-			var fieldRegex = new RegExp(this.fieldNamePrefix + "([A-Za-z0-9_\-]+)_([0-9]+)");
+			var fieldRegex = new RegExp(this.fieldNamePrefix + "([A-Za-z0-9_\-]+)_((new_)?[0-9]+)");
+			// var fieldRegex = new RegExp(this.fieldNamePrefix + "([A-Za-z0-9_\-]+)_([0-9]+)");
 			for(i=0; i < selects.length; i++) {
 				var element_id = selects[i].id;
 				
 				var info = element_id.match(fieldRegex);
-				if (info && info[2] && (parseInt(info[2]) == id)) {
-					if (typeof(this.initialValues[id][info[1]]) == 'boolean') {
-						this.initialValues[id][info[1]] = (this.initialValues[id][info[1]]) ? '1' : '0';
+
+				//.match puts the "new" with the id, should be solved by regex
+				//([0-9_]+)_((new_)?[0-9]+) -> step into the right direction but won't fit for all expressions
+
+				if(info && info[1] && info[2]) {
+					var start = info[1].length - "_new".length;
+					var replace = info[1].substr(start,4);
+
+					if (replace == "_new"){
+						info[1] = info[1].replace("_new", "");
+						info[2]="new_"+info[2];
 					}
-					jQuery(this.container + " #" + element_id + " option[value=" + this.initialValues[id][info[1]] +"]").attr('selected', true);
+				}
+
+				if (info && info[2] && (parseInt(info[2]) == id || info[2] == id)) {
+					if (!this.initialValues == undefined){
+                                            if (typeof(this.initialValues[id][info[1]]) == 'boolean') {
+                                                    this.initialValues[id][info[1]] = (this.initialValues[id][info[1]]) ? '1' : '0';
+                                            }
+                                        }
+					jQuery("#"+element_id).val(initialValues[info[1]]);
+					//jQuery(this.container + " #" + element_id + " option[value=" + this.initialValues[id][info[1]] +"]").attr('selected', true);
 				}
 			}
 			

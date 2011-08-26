@@ -34,6 +34,7 @@
 		<meta http-equiv="Content-Style-Type" content="text/css" />
 		<title><?php print $this->appconfig->get("window_title"); ?></title>
 		<link rel="stylesheet" href="<?php print $this->request->getThemeUrlPath(); ?>/css/base.css" type="text/css" media="screen" />
+		<link rel="stylesheet" href="<?php print $this->request->getThemeUrlPath(); ?>/css/sml.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="<?php print $this->request->getThemeUrlPath(); ?>/css/sets.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="<?php print $this->request->getThemeUrlPath(); ?>/css/jquery-ui-1.8.11.custom.css" type="text/css" media="screen" />
 		<link rel="stylesheet" href="<?php print $this->request->getBaseUrlPath(); ?>/js/videojs/video-js.css" type="text/css" media="screen" />

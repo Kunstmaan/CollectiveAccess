@@ -822,7 +822,6 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 		$vs_output = str_replace("^ELEMENT", $vs_element, $vs_display_format);
 		$vs_output = str_replace("^ERRORS", join('; ', $va_errors), $vs_output);
 		$vs_output = str_replace("^LABEL", $vs_label, $vs_output);
-		
 		return $vs_output;
 	}
 	# ------------------------------------------------------
@@ -1096,7 +1095,7 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 				$va_bundle_html[$va_bundle['placement_code']] = $this->getBundleFormHTML($va_bundle['bundle_name'], $va_bundle['placement_code'], $va_bundle['settings'], $pa_options);
 			}
 		}
-		
+
 		// is this a form to create a new item?
 		if (!$vn_pk_id) {
 			// auto-add mandatory fields if this is a new object
@@ -1117,7 +1116,7 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 				$va_bundle_html[$this->HIERARCHY_PARENT_ID_FLD] = caHTMLHiddenInput($this->HIERARCHY_PARENT_ID_FLD, array('value' => $pa_options['request']->getParameter($this->HIERARCHY_PARENT_ID_FLD, pInteger)));
 			}
 		}
-		
+
  		return $va_bundle_html;
  	}
  	# ------------------------------------------------------
@@ -1291,6 +1290,21 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 			$o_view->setVar('relationship_types', $t_item_rel->getRelationshipTypes(null, null,  array_merge($pa_options, $pa_bundle_settings)));
 			$o_view->setVar('relationship_types_by_sub_type', $t_item_rel->getRelationshipTypesBySubtype($this->tableName(), $this->get('type_id'),  array_merge($pa_options, $pa_bundle_settings)));
 		}
+
+		$arr_list_items = array();
+		// get all possible type codes
+		$ol_listcode = $t_item->getTypeListCode();
+		$t_list = new ca_lists();
+		if ($t_list->load(array('list_code' => $ol_listcode))) {
+			$arr_list_items = $t_list->getItemsForList($ol_listcode);
+		}
+
+		$arr_new_list_items = array(); // to prevent dificulties in javascript
+		foreach ($arr_list_items as $key => $value){
+			$arr_new_list_items[] = $arr_list_items[$key][1];
+		}
+
+		$o_view->setVar('quickAddItemTypes', $arr_new_list_items);
 		$o_view->setVar('t_subject', $this);
 		
 		

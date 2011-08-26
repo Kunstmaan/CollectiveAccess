@@ -34,6 +34,7 @@
   *
   */
 
+	require_once(__CA_LIB_DIR__.'/ca/ImportExport/Formats/BaseDataMoverFormat.php');
 	require_once(__CA_LIB_DIR__.'/ca/ImportExport/OAIPMH/Harvester/OAIPMHHarvesterOaiDC.php');
 	
 	
@@ -158,7 +159,7 @@ $g_ca_data_import_export_format_definitions['OAIDC'] = array(
     'end_tag'			=> ''
 );
 
-	class DataMoverOAIDC {
+	class DataMoverOAIDC extends BaseDataMoverFormat {
 		# -------------------------------------------------------
 		protected $ops_name = 'OAIDC';
 		# -------------------------------------------------------
@@ -188,7 +189,36 @@ $g_ca_data_import_export_format_definitions['OAIDC'] = array(
 		 * @return boolean|string - true on success, false on failure; if $pm_target is null or 'returnOutput' option is set to true then string representation of output metadata will be returned
 		 */
 		public function output($pm_target, $pa_options=null) {
-			die("Not implemented");
+			// die("Not implemented");
+			if (!$this->opa_records || !sizeof($this->opa_records)) { return false; }
+
+			$va_elements = $this->getElementList();
+			$va_format_info = $this->getFormatInfo();
+
+      $va_record_output = array();			// xml for each record
+			$va_fragments = array();
+      print "<pre>";
+			foreach($this->opa_records as $vn_i => $va_record) {
+        print "New record===>\n";
+				foreach($va_record as $vs_group => $va_mappings) {
+					// $va_destinations = array_keys($va_mappings);
+					foreach($va_mappings as $vs_destination => $va_values) {
+						if (is_array($va_values)) {
+							$va_values = caExtractValuesByUserLocale($va_values);
+						} else {
+							$va_values = array(0 => array($va_values));
+						}
+						foreach($va_values as $vn_x => $va_value_list) {
+							$vn_index = -1;
+							foreach($va_value_list as $vn_y => $vs_value) {
+                print "destination : [$vs_destination], value : [$vs_value]\n";
+              }
+            }
+          }
+        }
+      }
+      print "</pre>";
+      die;
 		}
 		# -------------------------------------------------------
 	}

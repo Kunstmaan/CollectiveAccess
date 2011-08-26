@@ -58,6 +58,10 @@
 						
 						<a href="<?php print urldecode(caEditorUrl($this->request, 'ca_occurrences', '{occurrence_id}')); ?>" class="caEditItemButton" id="<?php print $vs_id_prefix; ?>_edit_related_{n}"><?php print caNavIcon($this->request, __CA_NAV_BUTTON_GO__); ?></a>
 					</td>
+					<td>
+						<span id="<?php print $vs_id_prefix; ?>_newitemlink{n}" style="display:none;">
+						</span>
+					</td>
 				</tr>
 			</table>
 		</div>
@@ -85,7 +89,16 @@
 			hideOnNewIDList: ['<?php print $vs_id_prefix; ?>_edit_related_'],
 			showEmptyFormsOnLoad: 1,
 			relationshipTypes: <?php print json_encode($this->getVar('relationship_types_by_sub_type')); ?>,
-			autocompleteUrl: '<?php print caNavUrl($this->request, 'lookup', 'Occurrence', 'Get', $va_lookup_params); ?>'
+			autocompleteUrl: '<?php print caNavUrl($this->request, 'lookup', 'Occurrence', 'Get', $va_lookup_params); ?>',
+			overlay : {
+				inputid : 'autocomplete',
+				linkid : 'newitemlink',
+				textfieldname : 'Prefname',
+				overlayurl : '<?php print caNavUrl($this->request, 'editor/occurrences', 'OccurrenceEditor', 'Edit').'/type_id/'; ?>',
+				idfieldname : 'occurrence_id',
+				availableTypes : <?php print json_encode($this->getVar('quickAddItemTypes')); ?>,
+				newtext : '<?php print _t("new %1", _t("occurrence")); ?>'
+			}
 		});
 	});
 </script>

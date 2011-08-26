@@ -37,7 +37,7 @@
 	
 	// generate list of inital form values; the bundle Javascript call will
 	// use the template to generate the initial form
-	$va_inital_values = array();
+	$va_initial_values = array();
 	$va_reps = $t_subject->getRepresentations(array('thumbnail', 'original'));
 	$va_rep_type_list = $t_item->getTypeList();
 	$va_errors = array();
@@ -48,10 +48,10 @@
 			$vs_extracted_metadata = caFormatMediaMetadata(caUnserializeForDatabase($va_rep['media_metadata']));
 			$vs_md5 = isset($va_rep['info']['original']['MD5']) ? _t('MD5 signature').': '.$va_rep['info']['original']['MD5'] : '';
 			
-			$va_inital_values[$va_rep['representation_id']] = array(
+			$va_initial_values[$va_rep['representation_id']] = array(
 				'status' => $va_rep['status'], 
 				'access' => $va_rep['access'], 
-				'is_primary' => ($va_rep['is_primary'] == 1) ? true : false, 
+				'is_primary' => ($va_rep['is_primary'] == 1) ? 1 : 0, 
 				'locale_id' => $va_rep['locale_id'], 
 				'icon' => $va_rep['tags']['thumbnail'], 
 				'type' => $va_rep['info']['original']['PROPERTIES']['typename'], 
@@ -188,7 +188,7 @@
 	caUI.initBundle('#<?php print $vs_id_prefix.$t_item->tableNum().'_rel'; ?>', {
 		fieldNamePrefix: '<?php print $vs_id_prefix; ?>_',
 		templateValues: ['status', 'access', 'is_primary', 'media', 'locale_id', 'icon', 'type', 'dimensions', 'filename', 'num_multifiles', 'metadata', 'type_id', 'typename', 'fetched_from'],
-		initialValues: <?php print json_encode($va_inital_values); ?>,
+		initialValues: <?php print json_encode($va_initial_values); ?>,
 		errors: <?php print json_encode($va_errors); ?>,
 		forceNewValues: <?php print json_encode($va_failed_inserts); ?>,
 		itemID: '<?php print $vs_id_prefix; ?>Item_',
