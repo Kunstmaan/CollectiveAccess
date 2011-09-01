@@ -306,7 +306,6 @@ class ContainerableRelationshipAttributeValue extends AttributeValue implements 
 							}
 						);
 		";
-        /*
         if ($va_settings['enableQuickAdd']) {
             $vs_element .= "
 						var id = '{n}';
@@ -324,17 +323,18 @@ class ContainerableRelationshipAttributeValue extends AttributeValue implements 
 						addNewOnTheFlyOverlay(id, overlayoptions);
 			";
         }
-        */
         $vs_element .= "
 						var deletebuttonclass = 'caDeleteItemButton';
 						var delfunction = null;
 						var FormContainerID = '{fieldNamePrefix}'.substring(0,'{fieldNamePrefix}'.length-1);
 						var FormItemID = FormContainerID + 'Item_{n}';
 						try{
-							var delbuttondata = jQuery.data( jQuery('#'+ FormItemID +' .'+deletebuttonclass).get(0), 'events' ).click;
-							jQuery.each( delbuttondata, function(i,o) {
-							    var guid = i; // guid of the event
-							    delfunction = o; // the function definition of the event handler
+							var delbuttondata = jQuery.data( jQuery('#'+ FormItemID +' .'+deletebuttonclass).get(0), 'events' );
+							jQuery.each(delbuttondata, function(i,o) {
+                jQuery.each(o, function(j, h) {
+                  var guid = i;
+                  delfunction = h.handler;
+                });
 							});
 	 					}
 	 					catch(err){
@@ -346,7 +346,7 @@ class ContainerableRelationshipAttributeValue extends AttributeValue implements 
 							if(relationid > 0){
 								jQuery('#'+FormContainerID).append('<input type=\"hidden\" value=\"'+relationid+'\" name=\"{fieldNamePrefix}" . $pa_element_info['element_id'] . "_deleterelation{n}\">');
 	 						}
-				        	if(delfunction != null){
+		        	if(delfunction != null){
 								delfunction();
 	 						}
 	 						return false;
