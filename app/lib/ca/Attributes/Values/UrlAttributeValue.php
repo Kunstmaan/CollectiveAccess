@@ -191,7 +191,7 @@
  			if (!$va_settings['regex']) {
  				$va_settings['regex'] = "(http|ftp|https|rtmp|rtsp):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&;:/~\+#]*[\w\-\@?^=%&/~\+#])?";
  			}
- 			if ($va_settings['regex'] && !preg_match("!".$va_settings['regex']."!", $ps_value)) {
+ 			if ($va_settings['regex'] && !empty($ps_value) && !preg_match("!".$va_settings['regex']."!", $ps_value)) {
  				// regex failed
 				$this->postError(1970, _t('%1 is not a valid url', $pa_element_info['displayLabel']), 'UrlAttributeValue->parseValue()');
 				return false;
