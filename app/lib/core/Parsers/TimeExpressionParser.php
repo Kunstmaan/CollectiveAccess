@@ -149,6 +149,13 @@ class TimeExpressionParser {
 	function __construct($ps_expression=null, $ps_iso_code=null, $pb_debug=false) {	
 		global $g_ui_locale;
 		if (!$ps_iso_code) { $ps_iso_code = $g_ui_locale; }
+		if (!$ps_iso_code) {
+			$conf = new Configuration(__CA_CONF_DIR__."/global.conf");
+			$defaults = $conf->getList('locale_defaults');
+			if(is_array($defaults) && !empty($defaults)) {
+				$ps_iso_code = array_pop($defaults);
+			}
+		}
 		if (!$ps_iso_code) { $ps_iso_code = 'en_US'; }
 		
 		$this->opa_error_messages = array(
