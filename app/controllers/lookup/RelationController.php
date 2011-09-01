@@ -91,10 +91,18 @@ class RelationController extends ActionController {
                 if(strlen($this->ops_search_class)==0) $this->ops_search_class = 'ObjectSearch';
                 break;
             case 'ca_entities':
+                // Fix problem when looking up entries like "A. Vos"
+                $parts = explode(' ', $ps_query);
+                $newParts = array();
+                foreach($parts as $part) {
+                    $newParts[] = '+' . $part . '*';
+                }
+                $ps_query = implode(' ', $newParts);
+
                 //query the fulltext table directly
                 $item_table_num = $this->opo_item_instance->tableNum();
                 $ft_sql = "SELECT row_id, SUM(boost) FROM `ca_mysql_fulltext_search`
-                    WHERE table_num = ".$item_table_num." AND MATCH(fieldtext) AGAINST('".$ps_query."*' IN BOOLEAN MODE)
+                    WHERE table_num = ".$item_table_num." AND MATCH(fieldtext) AGAINST('".$ps_query."' IN BOOLEAN MODE)
                     GROUP BY row_id
                     ORDER BY SUM(boost) DESC";
                 $ft_result = $this->ops_db->query($ft_sql);
