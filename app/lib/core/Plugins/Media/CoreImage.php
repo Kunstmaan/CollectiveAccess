@@ -86,12 +86,14 @@ class WLPlugMediaCoreImage Extends WLPlug Implements IWLPlugMedia {
 			"WATERMARK"			=> array("image", "width", "height", "position", "opacity"),
 			"ROTATE" 			=> array("angle"),
 			"SET" 				=> array("property", "value"),
+			"DENSITY"			=> array("ppi", "mode"), // dummy
 			
 			# --- filters
 			"MEDIAN"			=> array("radius"),
 			"DESPECKLE"			=> array(""),
 			"SHARPEN"			=> array("radius", "sigma"),
 			"UNSHARPEN_MASK"	=> array("radius", "sigma", "amount", "threshold"),
+			"MAX_SCALE" 			=> array("width", "height"),
 		),
 		"PROPERTIES" => array(
 			"width" 			=> 'R',
@@ -675,6 +677,48 @@ class WLPlugMediaCoreImage Extends WLPlug Implements IWLPlugMedia {
 		case "SET":
 			while(list($k, $v) = each($parameters)) {
 				$this->set($k, $v);
+			}
+			break;
+		# -----------------------
+		case "MAX_SCALE":
+			$aa = $parameters["antialiasing"];
+			if ($aa <= 0) { $aa = 0; }
+
+			if($cw < $w && $ch < $h){
+
+				$this->handle['ops'][] = array(
+					'op' => 'size',
+					'width' => $cw ,
+					'height' => $ch,
+					'antialiasing' => $aa
+				);
+
+				$this->properties["width"] = $cw;
+				$this->properties["height"] = $ch;
+			}else{
+
+				$aspect_ratio= $cw/$ch;
+				$screen_ratio= $w/$h;
+
+				if($aspect_ratio < $screen_ratio){
+					$w=$aspect_ratio*$h;
+				}else{
+					$h=$w/$aspect_ratio;
+				}
+
+				$w = round($w);
+				$h = round($h);
+
+				$this->handle['ops'][] = array(
+					'op' => 'size',
+					'width' => $w ,
+					'height' => $h,
+					'antialiasing' => $aa
+				);
+				$this->properties["width"] = $w;
+				$this->properties["height"] = $h;
+
+
 			}
 			break;
 		# -----------------------

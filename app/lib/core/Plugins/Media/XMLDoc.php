@@ -69,7 +69,8 @@ class WLPlugMediaXMLDoc Extends WLPlug Implements IWLPlugMedia {
 		),
 		
 		"TRANSFORMATIONS" => array(
-			"SCALE" 			=> array("width", "height", "mode", "antialiasing")
+			"SCALE" 			=> array("width", "height", "mode", "antialiasing"),
+			"DENSITY"			=> array("ppi", "mode") // dummy
 		),
 		
 		"PROPERTIES" => array(

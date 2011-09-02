@@ -109,12 +109,14 @@ class WLPlugMediaImagick Extends WLPlug Implements IWLPlugMedia {
 			"WATERMARK"			=> array("image", "width", "height", "position", "opacity"),
 			"ROTATE" 			=> array("angle"),
 			"SET" 				=> array("property", "value"),
+			"DENSITY"			=> array("ppi", "mode"), // dummy
 			
 			# --- filters
 			"MEDIAN"			=> array("radius"),
 			"DESPECKLE"			=> array(""),
 			"SHARPEN"			=> array("radius", "sigma"),
 			"UNSHARPEN_MASK"	=> array("radius", "sigma", "amount", "threshold"),
+			"MAX_SCALE" 			=> array("width", "height"),
 		),
 		"PROPERTIES" => array(
 			"width" 			=> 'R',
@@ -771,6 +773,41 @@ class WLPlugMediaImagick Extends WLPlug Implements IWLPlugMedia {
 			case "SET":
 				while(list($k, $v) = each($parameters)) {
 					$this->set($k, $v);
+				}
+				break;
+			# -----------------------
+			case "MAX_SCALE":
+				$aa = $parameters["antialiasing"];
+				if ($aa <= 0) { $aa = 0; }
+
+				if($cw < $w && $ch < $h){
+					if (!$this->handle->resizeImage($cw, $ch, imagick::FILTER_CUBIC, $aa)) {
+								$this->postError(1610, _t("Error during resize operation"), "WLPlugImagick->transform()");
+								return false;
+						}
+					$this->properties["width"] = $cw;
+					$this->properties["height"] = $ch;
+				}else{
+
+					$aspect_ratio= $cw/$ch;
+					$screen_ratio= $w/$h;
+
+					if($aspect_ratio < $screen_ratio){
+						$w=$aspect_ratio*$h;
+					}else{
+						$h=$w/$aspect_ratio;
+					}
+
+					$w = round($w);
+					$h = round($h);
+
+					if (!$this->handle->resizeImage($w, $h, imagick::FILTER_CUBIC, $aa)) {
+								$this->postError(1610, _t("Error during resize operation"), "WLPlugImagick->transform()");
+								return false;
+					}
+					$this->properties["width"] = $w;
+					$this->properties["height"] = $h;
+
 				}
 				break;
 			# -----------------------

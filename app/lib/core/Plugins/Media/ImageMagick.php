@@ -110,12 +110,14 @@ class WLPlugMediaImageMagick Extends WLPlug Implements IWLPlugMedia {
 			"WATERMARK"			=> array("image", "width", "height", "position", "opacity"),
 			"ROTATE" 			=> array("angle"),
 			"SET" 				=> array("property", "value"),
+			"DENSITY"			=> array("ppi", "mode"),
 			
 			# --- filters
 			"MEDIAN"			=> array("radius"),
 			"DESPECKLE"			=> array(""),
 			"SHARPEN"			=> array("radius", "sigma"),
 			"UNSHARPEN_MASK"	=> array("radius", "sigma", "amount", "threshold"),
+			"MAX_SCALE" 			=> array("width", "height"),
 		),
 		"PROPERTIES" => array(
 			"width" 			=> 'R',
@@ -708,6 +710,40 @@ class WLPlugMediaImageMagick Extends WLPlug Implements IWLPlugMedia {
 				}
 			break;
 		# -----------------------
+		case "DENSITY":
+			$ppi = $parameters["ppi"];
+			if ($ppi < .1) { $ppi = 1; }
+			$mode = $parameters["mode"];
+			if(isset($mode)) {
+				$mode = strtolower(trim($mode));
+			}
+			if(!in_array($mode, array('simple', 'resample', 'resize'))) {
+				$mode = 'simple';
+			}
+			$extra = array();
+			if('resize' == $mode) {
+				$cr = $this->properties['resolution'];
+				$crx = $cr['x'];
+				$cry = $cr['y'];
+
+				// http://stackoverflow.com/questions/2121890/change-resolution-of-image-from-72-to-25-dpi-in-php
+				$w = ($ppi * $cw) / $crx;
+				$h = ($ppi * $ch) / $cry;
+				$extra = array(
+					'nw' => $w,
+					'nh' => $h,
+					'cw' => $cw,
+					'ch' => $ch
+				);
+			}
+			$this->handle['ops'][] = array(
+				'op' => 'density',
+				'ppi' => $ppi,
+				'mode' => $mode,
+				'extra' => $extra
+			);
+			break;
+		# -----------------------
 		case "ROTATE":
 			$angle = $parameters["angle"];
 			if (($angle > -360) && ($angle < 360)) {
@@ -766,6 +802,48 @@ class WLPlugMediaImageMagick Extends WLPlug Implements IWLPlugMedia {
 		case "SET":
 			while(list($k, $v) = each($parameters)) {
 				$this->set($k, $v);
+			}
+			break;
+		# -----------------------
+		case "MAX_SCALE":
+			$aa = $parameters["antialiasing"];
+			if ($aa <= 0) { $aa = 0; }
+
+			if($cw < $w && $ch < $h){
+
+				$this->handle['ops'][] = array(
+					'op' => 'size',
+					'width' => $cw ,
+					'height' => $ch,
+					'antialiasing' => $aa
+				);
+
+				$this->properties["width"] = $cw;
+				$this->properties["height"] = $ch;
+			}else{
+
+				$aspect_ratio= $cw/$ch;
+				$screen_ratio= $w/$h;
+
+				if($aspect_ratio < $screen_ratio){
+					$w=$aspect_ratio*$h;
+				}else{
+					$h=$w/$aspect_ratio;
+				}
+
+				$w = round($w);
+				$h = round($h);
+
+				$this->handle['ops'][] = array(
+					'op' => 'size',
+					'width' => $w ,
+					'height' => $h,
+					'antialiasing' => $aa
+				);
+				$this->properties["width"] = $w;
+				$this->properties["height"] = $h;
+
+
 			}
 			break;
 		# -----------------------
@@ -1189,9 +1267,32 @@ EOT;
 						if ($va_op['y'] < 0) { break; }
 						$va_ops['convert'][] = '-crop '.$va_op['width'].'x'.$va_op['height'].'+'.$va_op['x'].'+'.$va_op['y'];
 						break;
+					case 'density':
+						$ppi = $va_op['ppi'];
+						$pos = strpos($ppi,'x'); // check if an x is in the strpos
+						if(is_numeric($ppi) && $pos === false) {
+							$ppi = $ppi.'x'.$ppi; // if no x is found and ppi is numeric we put it this way
+						}
+						$mode = $va_op['mode'];
+						if('resize' == $mode) {
+							$extra = $va_op['extra'];
+							$cw = $extra['cw'];
+							$ch = $extra['ch'];
+
+							$nw = $extra['nw'];
+							$nh = $extra['nh'];
+
+							$va_ops['convert'][] = '-strip -units "PixelsPerInch" -density '.$ppi.' -resize '.$nw.'x'.$nh;
+							break;
+						}
+						if('resample' == $mode) { // check if we need to resample the image
+							$resample = ' -resample '.$ppi;
+						}
+						$va_ops['convert'][] = '-strip -units "PixelsPerInch" -density '.$ppi.$resample;
+						break;
 					case 'rotate':
 						if (!is_numeric($va_op['angle'])) { break; }
-						$va_ops['convert'] = '-rotate '.$va_op['angle'];
+						$va_ops['convert'][] = '-rotate '.$va_op['angle'];
 						break;
 					case 'filter_despeckle':
 						$va_ops['convert'][] = '-despeckle';

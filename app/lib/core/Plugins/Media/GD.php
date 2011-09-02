@@ -76,12 +76,14 @@ class WLPlugMediaGD Extends WLPlug Implements IWLPlugMedia {
 			"WATERMARK"	=> array("image", "width", "height", "position", "opacity"),	// dummy
 			"ROTATE" 			=> array("angle"),
 			"SET" 				=> array("property", "value"),
+			"DENSITY"			=> array("ppi", "mode"), // dummy
 			
 			# --- filters
 			"MEDIAN"			=> array("radius"),
 			"DESPECKLE"			=> array(""),
 			"SHARPEN"			=> array("radius", "sigma"),
 			"UNSHARPEN_MASK"	=> array("radius", "sigma", "amount", "threshold"),
+			"MAX_SCALE" 			=> array("width", "height"),
 		),
 		"PROPERTIES" => array(
 			"width" 			=> 'R',
@@ -494,6 +496,44 @@ class WLPlugMediaGD Extends WLPlug Implements IWLPlugMedia {
 			while(list($k, $v) = each($parameters)) {
 				$this->set($k, $v);
 			}
+			break;
+		# -----------------------
+		case "MAX_SCALE":
+			if($cw < $w && $ch < $h){
+				$r_new_img = imagecreatetruecolor($cw, $ch);
+				if (!imagecopyresampled($r_new_img, $this->handle, 0, 0, 0, 0, $cw, $ch, $cw, $ch)) {
+						$this->postError(1610, _t("Couldn't resize image"), "WLPlugGD->transform()");
+						return false;
+				}
+				imagedestroy($this->handle);
+				$this->handle = $r_new_img;
+				$this->properties["width"] = $cw;
+				$this->properties["height"] = $ch;
+			}else{
+				$aspect_ratio= $cw/$ch;
+				$screen_ratio= $w/$h;
+
+				if($aspect_ratio < $screen_ratio){
+					$w=$aspect_ratio*$h;
+				}else{
+					$h=$w/$aspect_ratio;
+				}
+
+				$w = round($w);
+				$h = round($h);
+
+				$r_new_img = imagecreatetruecolor($w, $h);
+				if (!imagecopyresampled($r_new_img, $this->handle, 0, 0, 0, 0, $w, $h, $cw, $ch)) {
+						$this->postError(1610, _t("Couldn't resize image"), "WLPlugGD->transform()");
+						return false;
+				}
+				imagedestroy($this->handle);
+				$this->handle = $r_new_img;
+				$this->properties["width"] = $w;
+				$this->properties["height"] = $h;
+
+			}
+
 			break;
 		# -----------------------
 		}

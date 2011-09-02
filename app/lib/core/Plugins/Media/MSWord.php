@@ -74,7 +74,8 @@ class WLPlugMediaMSWord Extends WLPlug Implements IWLPlugMedia {
 			"SCALE" 			=> array("width", "height", "mode", "antialiasing"),
 			"ANNOTATE"	=> array("text", "font", "size", "color", "position", "inset"),	// dummy
 			"WATERMARK"	=> array("image", "width", "height", "position", "opacity"),	// dummy
-			"SET" 				=> array("property", "value")
+			"SET" 				=> array("property", "value"),
+			"DENSITY"			=> array("ppi", "mode") // dummy
 		),
 		
 		"PROPERTIES" => array(

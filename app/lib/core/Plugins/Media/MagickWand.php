@@ -99,6 +99,7 @@ class WLPlugMediaMagickWand Extends WLPlug Implements IWLPlugMedia {
 			"DESPECKLE"			=> array(""),
 			"SHARPEN"			=> array("radius", "sigma"),
 			"UNSHARPEN_MASK"	=> array("radius", "sigma", "amount", "threshold"),
+			"MAX_SCALE" 			=> array("width", "height"),
 		),
 		"PROPERTIES" => array(
 			"width" 			=> 'R',
@@ -831,6 +832,44 @@ class WLPlugMediaMagickWand Extends WLPlug Implements IWLPlugMedia {
 		case "SET":
 			while(list($k, $v) = each($parameters)) {
 				$this->set($k, $v);
+			}
+			break;
+		# -----------------------
+		case "MAX_SCALE":
+			$aa = $parameters["antialiasing"];
+			if ($aa <= 0) { $aa = 0; }
+			if($cw < $w && $ch < $h){
+
+				if (!MagickResizeImage( $this->handle, $cw , $ch , MW_CubicFilter, $aa)) {
+							$reason      = WandGetExceptionType( $this->handle ) ;
+							$description = WandGetExceptionString( $this->handle ) ;
+							$this->postError(1610, _t("%1: %2 during resize operation", $reason, $description), "WLPlugMagickWand->transform()");
+							return false;
+				}
+				$this->properties["width"] = $cw;
+				$this->properties["height"] = $ch;
+			}else{
+
+				$aspect_ratio= $cw/$ch;
+				$screen_ratio= $w/$h;
+
+				if($aspect_ratio < $screen_ratio){
+					$w=$aspect_ratio*$h;
+				}else{
+					$h=$w/$aspect_ratio;
+				}
+
+				$w = round($w);
+				$h = round($h);
+
+				if (!MagickResizeImage( $this->handle, $w , $h , MW_CubicFilter, $aa)) {
+							$reason      = WandGetExceptionType( $this->handle ) ;
+							$description = WandGetExceptionString( $this->handle ) ;
+							$this->postError(1610, _t("%1: %2 during resize operation", $reason, $description), "WLPlugMagickWand->transform()");
+							return false;
+				}
+				$this->properties["width"] = $w;
+				$this->properties["height"] = $h;
 			}
 			break;
 		# -----------------------

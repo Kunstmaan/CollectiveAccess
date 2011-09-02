@@ -91,7 +91,8 @@ class WLPlugMediaAudio Extends WLPlug Implements IWLPlugMedia {
 			"ANNOTATE"	=> array("text", "font", "size", "color", "position", "inset"),	// dummy
 			"WATERMARK"	=> array("image", "width", "height", "position", "opacity"),	// dummy
 			"INTRO"		=> array("filepath"),
-			"OUTRO"		=> array("filepath")
+			"OUTRO"		=> array("filepath"),
+			"DENSITY"	=> array("ppi", "mode") // dummy
 		),
 
 		"PROPERTIES" => array(

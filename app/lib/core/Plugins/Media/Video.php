@@ -93,7 +93,8 @@ class WLPlugMediaVideo Extends WLPlug Implements IWLPlugMedia {
 			"SET" 		=> array("property", "value"),
 			"ANNOTATE"	=> array("text", "font", "size", "color", "position", "inset"),	// dummy
 			"WATERMARK"	=> array("image", "width", "height", "position", "opacity"),	// dummy
-			"SCALE" 	=> array("width", "height", "mode", "antialiasing")
+			"SCALE" 	=> array("width", "height", "mode", "antialiasing"),
+			"DENSITY"			=> array("ppi", "mode") // dummy
 		),
 
 		"PROPERTIES" => array(
@@ -612,7 +613,10 @@ class WLPlugMediaVideo Extends WLPlug Implements IWLPlugMedia {
 					if (($vn_start_secs = $this->properties["duration"]/8) > 120) { 
 						$vn_start_secs = 120;		// always take a frame from the first two minutes to ensure performance (ffmpeg gets slow if it has to seek far into a movie to extract a frame)
 					}
-					exec(escapeshellcmd($this->ops_path_to_ffmpeg." -ss ".($vn_start_secs)." -i \"".$this->filepath."\" -f mjpeg -t 0.001 -y \"".$filepath.".".$ext."\""), $va_output, $vn_return);
+					// exec(escapeshellcmd($this->ops_path_to_ffmpeg." -ss ".($vn_start_secs)." -i \"".$this->filepath."\" -f mjpeg -t 0.001 -y \"".$filepath.".".$ext."\""), $va_output, $vn_return);
+          // better command? http://www.itbroadcastanddigitalcinema.com/ffmpeg_howto.html
+          // mix between the current and the one from the website
+          exec(escapeshellcmd($this->ops_path_to_ffmpeg." -i \"".$this->filepath."\" -vcodec mjpeg -vframes 1 -an -f rawvideo -s ".$vn_preview_width."x".$vn_preview_height." -ss ".($vn_start_secs)." -y \"".$filepath.".".$ext."\""), $va_output, $vn_return);
 					if (($vn_return < 0) || ($vn_return > 1) || (!@filesize($filepath.".".$ext))) {
 						@unlink($filepath.".".$ext);
 						// don't throw error as ffmpeg cannot generate frame still from all files
