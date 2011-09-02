@@ -40,6 +40,13 @@ class BaseService {
 	# -------------------------------------------------------
 	public function  __construct($po_request) {
 		$this->opo_request = $po_request;
+
+    // we set this to parse our date well, configurable in app.conf
+		$config = Configuration::load();
+		if ($vs_locale = $this->opo_request->config->get("default_service_locale")) {
+			global $g_ui_locale;
+			$g_ui_locale = $vs_locale;
+		}
 	}
 	# -------------------------------------------------------
 	/**
@@ -87,6 +94,43 @@ class BaseService {
 	 */
 	public function getUserID(){
 		return $this->opo_request->getUserID();
+	}
+	# -------------------------------------------------------
+	/**
+	 * we do it this way because nusoap or zend soap can't handle keys in array so we can't send the return_options directly. In stead we'll send an array with things we need.
+	 *
+	 * If the array is empty we'll return everything
+	 *
+	 * If you only want basic info use 'basic' or something that doesn't exist
+	 */
+	protected function generateReturnOptions($to_return = array(), $representation_versions = array()) {
+		if(!isset($to_return) || !is_array($to_return) || empty($to_return)) {
+			return array();
+		}
+
+		$items = array();
+		foreach($to_return as $item) {
+			$items[$item] = TRUE;
+		}
+
+		$result = array_merge(array(
+			'primary_representation_only' => FALSE,
+			'representations' => FALSE,
+			'representation_annotations' => FALSE,
+			'relations' => FALSE,
+			'labels' => FALSE,
+			'meta_data' => FALSE,
+			'hierarchy' => FALSE,
+			'tags' => FALSE,
+			'comments' => FALSE,
+			'rating' => FALSE
+		), $items);
+
+		if(isset($representation_versions) && is_array($representation_versions) && !empty($representation_versions)) {
+			$result['representation_versions'] = $representation_versions;
+		}
+
+		return $result;
 	}
 	# -------------------------------------------------------
 }

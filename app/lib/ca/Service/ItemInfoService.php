@@ -42,6 +42,7 @@ require_once(__CA_MODELS_DIR__."/ca_relationship_types.php");
 require_once(__CA_MODELS_DIR__."/ca_sets.php");
 require_once(__CA_MODELS_DIR__."/ca_set_items.php");
 require_once(__CA_MODELS_DIR__."/ca_metadata_elements.php");
+require_once(__CA_LIB_DIR__."/core/Media/MediaProcessingSettings.php");
 
 class ItemInfoService extends BaseService {
 	# -------------------------------------------------------
@@ -125,14 +126,40 @@ class ItemInfoService extends BaseService {
 	 *
 	 * @param string $type can be one of: [ca_objects, ca_entities, ca_places, ca_occurrences, ca_collections, ca_list_items]
 	 * @param int $item_id primary key
+	 * @param array $to_return array explaining which info you need. If this is empty everything will be returned.
+	 * @param array $representation_versions array explaining which representation versions you need.
 	 * @return array associative array (field_name => field_value)
 	 * @throws SoapFault
 	 */
-	public function getItem($type, $item_id){
+	public function getItem($type, $item_id, $to_return = array(), $representation_versions = array()){
 		if(!($t_subject_instance = $this->getTableInstance($type,$item_id))){
 			throw new SoapFault("Server", "Invalid type or item_id");
 		}
-		return $t_subject_instance->getFieldValuesArray();
+		$return_options = $this->generateReturnOptions($to_return, $representation_versions);
+		$values_arr = $t_subject_instance->getItemInformationForService($return_options);
+		return $values_arr;
+	}
+	# -------------------------------------------------------
+	/**
+	 * Get data for specified items
+	 *
+	 * @param string $type can be one of: [ca_objects, ca_entities, ca_places, ca_occurrences, ca_collections, ca_list_items]
+	 * @param array $item_ids primary keys of objects to search for
+	 * @param array $to_return array explaining which info you need. If this is empty everything will be returned.
+	 * @param array $representation_versions array explaining which representation versions you need.
+	 * @return array
+	 * @throws SoapFault
+	 */
+	public function getItems($type, $item_ids, $to_return = array(), $representation_versions = array()){
+		$result = array();
+		$return_options = $this->generateReturnOptions($to_return, $representation_versions);
+		foreach($item_ids as $index => $item_id) {
+			if(!($t_subject_instance = $this->getTableInstance($type, $item_id))){
+				throw new SoapFault("Server", "Invalid type or item_id ".$item_id);
+			}
+			$result[$item_id] = $t_subject_instance->getItemInformationForService($return_options);
+		}
+		return $result;
 	}
 	# -------------------------------------------------------
 	/**
@@ -254,6 +281,24 @@ class ItemInfoService extends BaseService {
 		} else {
 			throw new SoapFault("Server", "This item can't take labels");
 		}
+	}
+	# -------------------------------------------------------
+	/**
+	 * Get the specified representation
+	 *
+	 * @param int $representation_id identifier of the representation
+	 * @param array $versions list of media versions that should be included in the result
+	 * @return array
+	 * @throws SoapFault
+	 */
+	public function getObjectRepresentation($representation_id, $versions = array()){
+		require_once(__CA_MODELS_DIR__."/ca_object_representations.php");
+		if(!($t_subject_instance = new ca_object_representations($representation_id))){
+			throw new SoapFault("Server", "Invalid representation_id");
+		}
+		return $t_subject_instance->getItemInformationForService(array(
+			'versions' => $versions
+		));
 	}
 	# -------------------------------------------------------
 	/**
@@ -379,27 +424,34 @@ class ItemInfoService extends BaseService {
 	/**
 	 * Gets list of all sets
 	 *
+   * @param array $options
 	 * @return array
 	 * @throws SoapFault
 	 */
-	public function getSets(){
+	public function getSets($options = array()) {
 		$t_set = new ca_sets();
-		return $t_set->getSets(array('user_id' => $this->opo_request->getUserID()));
+    if (!isset($options['user_id'])) {
+      $options['user_id'] = $this->opo_request->getUserID();
+    }
+		return $t_set->getSets($options);
 	}
 	# -------------------------------------------------------
 	/**
 	 * Gets set info for specified set
 	 *
 	 * @param int $set_id
+	 * @param array $check_access used for item_count
 	 * @return array
 	 * @throws SoapFault
 	 */
-	public function getSet($set_id){
+	public function getSet($set_id, $check_access = array()){
 		$t_set = new ca_sets();
 		if(!$t_set->load($set_id)){
 			throw new SoapFault("Server", "Invalid set_id");
 		}
-		return $t_set->getFieldValuesArray();
+		return $t_set->getItemInformationForService(array(
+			"checkAccess" => $check_access
+		));
 	}
 	# -------------------------------------------------------
 	/**
@@ -441,6 +493,22 @@ class ItemInfoService extends BaseService {
 		return $t_set->getSetsForItem($type, $item_id, array('user_id' => $this->opo_request->getUserID()));
 	}
 	# -------------------------------------------------------
+	/**
+	 * Gets Metadata information for a specific element
+	 *
+	 * @param int $element_id
+	 * @return array
+	 * @throws SoapFault
+	 */
+	public function getMetadataForElement($element_id){
+		$t_element = new ca_metadata_elements();
+		if (!$t_element->load(array('element_id' => $element_id))) {
+			throw new SoapFault("Server", "Invalid element ID");
+		}
+		return $t_element->getFieldValuesArray();
+	}
+
+  # -------------------------------------------------------
 	# Utilities
 	# -------------------------------------------------------
 	private function getTableInstance($ps_type, $pn_type_id_to_load=null,$pb_check_bm_with_attributes=false){
