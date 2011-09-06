@@ -349,6 +349,32 @@ class SearchIndexer extends SearchBase {
 									}
 									
 									break;
+                case 23:
+                  // Collection attribute
+									$va_attributes = $t_subject->getAttributesByElement($va_matches[1], array('row_id' => $pn_subject_row_id));
+                  $coll_id = null;
+									foreach($va_attributes as $vo_attribute) {
+										foreach($vo_attribute->getValues() as $vo_value) {
+                      if(method_exists($vo_value, 'getCollectionID')) {
+                        $coll_id = $vo_value->getCollectionID();
+                      }
+                    }
+                  }
+                  if (!is_null($coll_id)) {
+                    require_once(__CA_MODELS_DIR__.'/ca_collections.php');
+                    $t_coll = new ca_collections();
+                    // Fetch hierarchy ids
+                    $va_ancestors = $t_coll->getHierarchyAncestors($coll_id, array('idsOnly' => true, 'includeSelf' => true));
+                    // Fetch labels
+                    $va_labels = $t_coll->getPreferredDisplayLabelsForIDs($va_ancestors);
+                    $va_field_content = array();
+                    foreach ($va_labels as $coll_id => $vs_label) {
+                      $va_field_content[] = ' collections' . $coll_id . 'collections ' . $vs_label;
+                    }
+                    // Add all labels to index...
+                    $this->opo_engine->indexField($pn_subject_tablenum, '_hier_ancestors', $pn_subject_row_id, join($va_field_content,"\n"), $va_data);
+                  }
+                  // Drop through to default... (just in case)
 								default:
 									$va_attributes = $t_subject->getAttributesByElement($va_matches[1], array('row_id' => $pn_subject_row_id));
 									foreach($va_attributes as $vo_attribute) {
