@@ -269,6 +269,144 @@ class UserContentService extends BaseService {
 		}
 	}
 	# -------------------------------------------------------
+	/**
+	 * Add image annotation to specified representations. this request needs the User Image Annotation plugin to be activated!! This plugin adds the possibillity of validating the annotations.
+	 *
+	 * @param int $representation_id primary key
+	 * @param int $original_top top position of the annotation
+	 * @param int $original_left left position of the annotation
+	 * @param int $original_width width of the annotation
+	 * @param int $original_height height of the annotation
+	 * @param string $annotation text
+	 * @param int  $locale_id
+	 * @param string $email
+	 * @param string $name text
+	 * @param int $user_id
+	 * @return int
+	 * @throws SoapFault
+	 */
+	public function addImageAnnotation($representation_id, $original_top, $original_left, $original_width, $original_height, $annotation='', $locale_id=null, $email=null, $name=null, $user_id=null) {
+		$this->checkLoginAndPermissions();
+		require_once(__CA_MODELS_DIR__.'/ca_object_representations.php');
+		if(!($representation = new ca_object_representations($representation_id))){
+			throw new SoapFault("Server", "Invalid representation");
+		}
+		if(!isset($original_top) || !is_numeric($original_top) || !isset($original_left) || !is_numeric($original_left) || !isset($original_width) || !is_numeric($original_width) || !isset($original_height) || !is_numeric($original_height)) {
+			throw new SoapFault("Server", "Invalid annotation parameters");
+		}
+
+		if($user_id == null) {
+			$user_id = $this->getUserID();
+		}
+
+		require_once(__CA_MODELS_DIR__.'/ca_user_annotations.php');
+		$t_user_annotation = new ca_user_annotations();
+		$t_user_annotation->setMode(ACCESS_WRITE);
+		$t_user_annotation->set('row_id', $representation_id);
+		$t_user_annotation->set('user_id', $user_id);
+		$t_user_annotation->set('locale_id', $locale_id);
+		$t_user_annotation->set('original_top', $original_top);
+		$t_user_annotation->set('original_left', $original_left);
+		$t_user_annotation->set('original_width', $original_width);
+		$t_user_annotation->set('original_height', $original_height);
+
+		$t_user_annotation->set('annotation', $annotation);
+		$t_user_annotation->set('email', $email);
+		$t_user_annotation->set('name', $name);
+
+		$t_user_annotation->insert();
+
+		if($t_user_annotation->numErrors()==0){
+			return $t_user_annotation->get('user_annotation_id');
+		} else {
+			throw new SoapFault("Server", "There were errors while adding the annotation: ".join(";",$t_user_annotation->getErrors()));
+		}
+	}
+	# -------------------------------------------------------
+	/**
+	 * Update image annotation to specified representations. this request needs the User Image Annotation plugin to be activated!! This plugin adds the possibillity of validating the annotations.
+	 *
+	 * @param int $annotation_id primary key
+	 * @param int $original_top top position of the annotation
+	 * @param int $original_left left position of the annotation
+	 * @param int $original_width width of the annotation
+	 * @param int $original_height height of the annotation
+	 * @param string $annotation text
+	 * @param int  $locale_id
+	 * @param string $email
+	 * @param string $name text
+	 * @param int $user_id
+	 * @return int
+	 * @throws SoapFault
+	 */
+	public function updateImageAnnotation($annotation_id, $original_top, $original_left, $original_width, $original_height, $annotation='', $locale_id=null, $email=null, $name=null, $user_id=null) {
+		$this->checkLoginAndPermissions();
+
+		if(!isset($original_top) || !is_numeric($original_top) || !isset($original_left) || !is_numeric($original_left) || !isset($original_width) || !is_numeric($original_width) || !isset($original_height) || !is_numeric($original_height)) {
+			throw new SoapFault("Server", "Invalid annotation parameters");
+		}
+
+		require_once(__CA_MODELS_DIR__.'/ca_user_annotations.php');
+		if(!($t_user_annotation = new ca_user_annotations($annotation_id))){
+			throw new SoapFault("Server", "Invalid annotation");
+		}
+
+		$t_user_annotation->setMode(ACCESS_WRITE);
+		if(isset($user_id)) {
+			$t_user_annotation->set('user_id', $user_id);
+		}
+		if(isset($locale_id)) {
+			$t_user_annotation->set('locale_id', $locale_id);
+		}
+		$t_user_annotation->set('original_top', $original_top);
+		$t_user_annotation->set('original_left', $original_left);
+		$t_user_annotation->set('original_width', $original_width);
+		$t_user_annotation->set('original_height', $original_height);
+
+		$t_user_annotation->set('annotation', $annotation);
+
+		if(isset($email) && !empty($email)) {
+			$t_user_annotation->set('email', $email);
+		}
+		if(isset($name) && !empty($name)) {
+			$t_user_annotation->set('name', $name);
+		}
+
+		$t_user_annotation->update();
+
+		if($t_user_annotation->numErrors()==0){
+			return $t_user_annotation->get('user_annotation_id');
+		} else {
+			throw new SoapFault("Server", "There were errors while updating the annotation: ".join(";",$t_user_annotation->getErrors()));
+		}
+	}
+	# -------------------------------------------------------
+	/**
+	 * Delete image annotation.
+	 *
+	 * @param int $annotation_id primary key
+	 * @return boolean
+	 * @throws SoapFault
+	 */
+	public function deleteImageAnnotation($annotation_id) {
+		$this->checkLoginAndPermissions();
+
+		require_once(__CA_MODELS_DIR__.'/ca_user_annotations.php');
+		if(!($t_user_annotation = new ca_user_annotations($annotation_id))){
+			throw new SoapFault("Server", "Invalid annotation");
+		}
+
+		$t_user_annotation->setMode(ACCESS_WRITE);
+		$t_user_annotation->delete();
+
+		if($t_user_annotation->numErrors()==0){
+			return true;
+		} else {
+			throw new SoapFault("Server", "There were errors while deleting the annotation: ".join(";",$t_user_annotation->getErrors()));
+		}
+	}
+
+	# -------------------------------------------------------
 	# Utilities
 	# -------------------------------------------------------
 	private function getTableInstance($ps_type,$pn_type_id_to_load=null){
