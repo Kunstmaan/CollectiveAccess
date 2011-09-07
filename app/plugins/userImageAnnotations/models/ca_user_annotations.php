@@ -3,8 +3,7 @@
 require_once(__CA_LIB_DIR__.'/core/BaseModel.php');
 require_once(__CA_MODELS_DIR__.'/ca_objects.php');
 
-global $g_ca_models_definitions;
-$g_ca_models_definitions['ca_user_annotations'] = array(
+BaseModel::$s_ca_models_definitions['ca_user_annotations'] = array(
  	'NAME_SINGULAR' 	=> _t('user annotation'),
  	'NAME_PLURAL' 		=> _t('user annotations'),
  	'FIELDS' 			=> array(
