@@ -111,6 +111,7 @@ require_once(__CA_LIB_DIR__."/core/Db/Transaction.php");
 require_once(__CA_LIB_DIR__."/core/Media/MediaProcessingSettings.php");
 require_once(__CA_APP_DIR__."/helpers/utilityHelpers.php");
 require_once(__CA_LIB_DIR__."/ca/ApplicationPluginManager.php");
+require_once(__CA_LIB_DIR__."/core/Zend/Cache.php");
 
 /**
  * Base class for all database table classes. Implements database insert/update/delete
@@ -7450,7 +7451,7 @@ $pa_options["display_form_field_tips"] = true;
 			SELECT *
 			FROM ca_item_comments
 			WHERE
-				(table_num = ?) AND (row_id = ?) {$vs_user_sql} {$vs_moderation_sql}
+				(comment IS NOT NULL ) AND (table_num = ?) AND (row_id = ?) {$vs_user_sql} {$vs_moderation_sql}
 		", $this->tableNum(), $vn_row_id);
 		
 		return $qr_comments->getAllRows();
@@ -7512,30 +7513,38 @@ $pa_options["display_form_field_tips"] = true;
 	 * Return the highest rated item(s)
 	 * Return an array of primary key values
 	 */
-	public function getHighestRated($pb_moderation_status=true, $pn_num_to_return=1, $va_access_values = array()) {
-		$vs_moderation_sql = '';
+	public function getHighestRated($pb_moderation_status=true, $pn_num_to_return=1, $pa_options = array()) {
+		$va_wheres = array();
+		$va_joins = array();
 		if (!is_null($pb_moderation_status)) {
-			$vs_moderation_sql = ($pb_moderation_status) ? ' AND (ca_item_comments.moderated_on IS NOT NULL)' : ' AND (ca_item_comments.moderated_on IS NULL)';
+			$va_wheres[] = ($pb_moderation_status) ? ' AND (ca_item_comments.moderated_on IS NOT NULL)' : ' AND (ca_item_comments.moderated_on IS NULL)';
 		}
-		$vs_access_join = "";
-		$vs_access_where = "";
-		if (isset($va_access_values) && is_array($va_access_values) && sizeof($va_access_values) && $this->hasField('access')) {		
-			$vs_table_name = $this->tableName();
-			$vs_primary_key = $this->PrimaryKey();
-			if ($vs_table_name && $vs_primary_key) {
-				$vs_access_join = 'INNER JOIN '.$vs_table_name.' as rel ON rel.'.$vs_primary_key." = ca_item_comments.row_id ";
-				$vs_access_where = ' AND rel.access IN ('.join(',', $va_access_values).')';
-			}
-		}
+    if (isset($pa_options) && is_array($pa_options)) {
+      if (isset($pa_options['checkAccess']) && is_array($pa_options['checkAccess']) && sizeof($pa_options['checkAccess']) && $this->hasField('access')) {
+        $vs_table_name = $this->tableName();
+        $vs_primary_key = $this->PrimaryKey();
+        if ($vs_table_name && $vs_primary_key) {
+          $va_joins[] = 'INNER JOIN '.$vs_table_name.' as rel ON rel.'.$vs_primary_key.' = ca_item_comments.row_id ';
+          $va_wheres[] = 'rel.access IN ('.join(',', $va_access_values).')';
+        }
+      }
+      if (isset($pa_options['hasRepresentations']) && is_array($pa_options['hasRepresentations']) && sizeof($pa_options['hasRepresentations']) && ($this->tableName() == 'ca_objects')) {
+        $va_joins[] = 'INNER JOIN ca_objects_x_object_representations ON ca_objects_x_object_representations.object_id = ca_item_comments.row_id';
+        $va_wheres[] = 'ca_objects_x_object_representations.is_primary = 1';
+      }
+    }
+		$vs_where_sql = join(' AND ', $va_wheres);
+		$vs_join_sql = join(' ', $va_joins);
+
 		$o_db = $this->getDb();
 		$qr_comments = $o_db->query("
 			SELECT ca_item_comments.row_id
 			FROM ca_item_comments
-			{$vs_access_join}
+			{$vs_join_sql}
 			WHERE
 				(ca_item_comments.table_num = ?)
 				{$vs_moderation_sql}
-				{$vs_access_where}
+				AND {$vs_where_sql}
 			GROUP BY
 				ca_item_comments.row_id
 			ORDER BY
@@ -7828,6 +7837,161 @@ $pa_options["display_form_field_tips"] = true;
 			$va_random_items[$qr_res->get($this->primaryKey())] = $qr_res->getRow();
 		}
 		return $va_random_items;
+	}
+
+	# --------------------------------------------------------------------------------------------
+	public function get_cache($force_reload = FALSE) {
+		static $cache_instance;
+		if(!isset($cache_instance) || is_null($cache_instance) || $force_reload) {
+			$va_frontend_options = array(
+				'lifetime' => 3600, 				/* cache lives forever (until manual destruction) */
+				'logging' => false,					/* do not use Zend_Log to log what happens */
+				'write_control' => true,			/* immediate read after write is enabled (we don't write often) */
+				'automatic_cleaning_factor' => 0, 	/* no automatic cache cleaning */
+				'automatic_serialization' => true	/* we store arrays, so we have to enable that */
+			);
+			$vs_cache_dir = __CA_APP_DIR__.'/tmp';//$this->opo_app_config->get('site_home_dir').'/tmp';
+			$va_backend_options = array();
+
+			$cache_instance = Zend_Cache::factory('Core', 'Apc', $va_frontend_options, $va_backend_options);
+		}
+
+		return $cache_instance;
+	}
+	# --------------------------------------------------------------------------------------------
+	public function load_from_cache($key) {
+		$key = $this->tableName().'_'.$key;
+		$key = md5($key);
+		return $this->get_cache()->load($key);
+	}
+	# --------------------------------------------------------------------------------------------
+	public function save_to_cache($key, $value) {
+		$key = $this->tableName().'_'.$key;
+		$key = md5($key);
+		return $this->get_cache()->save($value, $key);
+	}
+	# --------------------------------------------------------------------------------------------
+	/**
+	 * Returns an array with as much as info as possible. This is used in the Web services, so that not to many requests need to be made.
+	 * Information added:
+	 * 	- field values
+	 *  - ratings
+	 *  - comments
+	 *  - tags
+	 */
+	public function getItemInformationForService($return_options = array()) {
+		$primary_key = $this->getPrimaryKey();
+		$object_key = $primary_key;
+		$result = $this->load_from_cache($object_key);
+		if(!isset($result) || !is_array($result) || empty($result)) {
+// error_log('Base information not cached '.$object_key);
+			$result = $this->getFieldValuesArray();
+
+			$this->save_to_cache($object_key, $result);
+		}
+
+		if(!isset($return_options['rating']) || $return_options['rating'] == true) {
+			$rating_key = $primary_key.'_rating';
+			$ratings = $this->load_from_cache($rating_key);
+			if(!isset($ratings) || !is_array($ratings) || empty($ratings)) {
+// error_log('Rating information not cached '.$rating_key);
+				$ratings = array();
+				$ratings['total'] = $this->getRatingsCount(false);
+				$ratings['average'] = $this->getAverageRating(false);
+				$this->save_to_cache($rating_key, $ratings);
+			}
+			$result['rating'] = $ratings;
+		}
+
+		if(!isset($return_options['comments']) || $return_options['comments'] == true) {
+			$comments_key = $primary_key.'_comments';
+			$comments = $this->load_from_cache($comments_key);
+			if(!isset($comments) || !is_array($comments)) {
+// error_log('Comment information not cached '.$comments_key);
+				$comments = $this->getComments();
+				$this->save_to_cache($comments_key, $comments);
+			}
+			$result['comments'] = $comments;
+		}
+
+		if(!isset($return_options['tags']) || $return_options['tags'] == true) {
+			$tags_key = $primary_key.'_tags';
+			$tags = $this->load_from_cache($tags_key);
+			if(!isset($tags) || !is_array($tags)) {
+// error_log('Tags information not cached '.$tags_key);
+				$tags = $this->getTags();
+				$this->save_to_cache($tags_key, $tags);
+			}
+			$result['tags'] = $tags;
+		}
+
+		if(!isset($return_options['hierarchy']) || $return_options['hierarchy'] == true) {
+			if($this->isHierarchical()) {
+				$hierarchy_key = $primary_key.'_hierarchy';
+				$hierarchy = $this->load_from_cache($hierarchy_key);
+				if(!isset($hierarchy) || !is_array($hierarchy) || empty($hierarchy)) {
+// error_log('Hierarchy information not cached '.$hierarchy_key);
+					$hierarchy = array();
+					$ancestors = array();
+					foreach($this->getHierarchyAncestors() as $key => $ancestor) {
+						$node = $ancestor['NODE'];
+						$id = $node[$this->PRIMARY_KEY];
+						## label ophalen
+						$inst = $this->_DATAMODEL->getInstanceByTableNum($this->tableNum());
+						$display_label = array();
+						if(method_exists($inst, 'getDisplayLabels')) {
+							if($inst->load($id)) {
+								$display_label = $inst->getDisplayLabels();
+							}
+						}
+
+						$ancestors[$key] = array(
+							'id' => $id,
+							'idno' => $node['idno'],
+							'parent_id' => $node['parent_id'],
+							'label' => $display_label,
+							'node' => $node,
+						);
+
+						if($type_id = $inst->get('type_id')) {
+//							error_log('type_id: '.$type_id);
+							$ancestors[$key]['type_id'] = $type_id;
+						}
+					}
+					$hierarchy['ancestors'] = $ancestors;
+
+					$children = array();
+					foreach($this->getHierarchyChildren() as $child) {
+						$node = $child['NODE'];
+						$id = $node[$this->PRIMARY_KEY];
+						## label ophalen
+						$inst = $this->_DATAMODEL->getInstanceByTableNum($this->tableNum());
+						$display_label = array();
+						if(method_exists($inst, 'getDisplayLabels')) {
+							if($inst->load($id)) {
+								$display_label = $inst->getDisplayLabels();
+							}
+						}
+
+						$children[$key] = array(
+							'id' => $id,
+							'idno' => $node['idno'],
+							'parent_id' => $node['parent_id'],
+							'label' => $display_label,
+							'node' => $node
+						);
+
+						if($type_id = $inst->get('type_id')) {
+							$children[$key]['type_id'] = $type_id;
+						}
+					}
+					$hierarchy['children'] = $children;
+					$this->save_to_cache($hierarchy_key, $hierarchy);
+				}
+				$result['hierarchy'] = $hierarchy;
+			}
+		}
+		return $result;
 	}
 	# --------------------------------------------------------------------------------------------
 	# Change log display

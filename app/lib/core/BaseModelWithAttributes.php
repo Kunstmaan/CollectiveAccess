@@ -1544,5 +1544,53 @@
 			return BaseModelWithAttributes::$s_element_code_lookup_cache[$t_element->get('element_code')] = BaseModelWithAttributes::$s_element_code_lookup_cache[$t_element->getPrimaryKey()] = $t_element->get('element_code');
 		}
 		# ------------------------------------------------------------------
+		/**
+		 * Returns an array with as much as info as possible. This is used in the Web services, so that not too many requests need to be made.
+		 * Information added:
+		 * 	- field values
+		 * 	- metadata information
+		 */
+		public function getItemInformationForService($return_options = array()) {
+			$result = parent::getItemInformationForService($return_options);
+
+			if(!isset($return_options['meta_data']) || $return_options['meta_data'] == true) {
+				$primary_key = $this->getPrimaryKey();
+
+				$meta_data_key = $primary_key.'_meta_data_';
+				$metadatacontents = $this->load_from_cache($meta_data_key.'attribute_metadata');
+				$metadataarray = $this->load_from_cache($meta_data_key.'attribute_mapping');
+				$extendedValues = $this->load_from_cache($meta_data_key.'extended_values');
+				if(!isset($metadatacontents) || !is_array($metadatacontents) || !isset($metadataarray) || !is_array($metadataarray) || !isset($extendedValues) || !is_array($extendedValues)) {
+					$metadatacontents = array();
+					$metadataarray = array();
+					$extendedValues = array();
+					foreach($result as $key => $value){
+						if(preg_match('/^'.preg_quote("_ca_attribute_")."/", $key)) {
+							$va_tmp = explode('attribute_', $key);
+							$elementId = $va_tmp[1];
+							require_once(__CA_MODELS_DIR__."/ca_metadata_elements.php");
+							$t_element = new ca_metadata_elements();
+							if (!$t_element->load(array('element_id' => $elementId))) {
+								throw new SoapFault("Server", "Invalid element ID");
+							}
+							$attributeMetadata = $t_element->getFieldValuesArray();
+							$metadataarray[$elementId] = $attributeMetadata['element_code'];
+							$extendedValues[$elementId] = $this->getAttributesByElement($elementId, array('row_id' => $item_id));
+							$metadatacontents[$elementId] = $attributeMetadata;
+						}
+					}
+
+					$this->save_to_cache($meta_data_key.'attribute_metadata', $metadatacontents);
+					$this->save_to_cache($meta_data_key.'attribute_mapping', $metadataarray);
+					$this->save_to_cache($meta_data_key.'extended_values', $extendedValues);
+				}
+				$result["attribute_mapping"] = $metadataarray;
+				$result["attribute_metadata"] = $metadatacontents;
+				$result["extended_values"] = $extendedValues;
+			}
+
+			return $result;
+		}
+    # ------------------------------------------------------------------
 	}
 ?>

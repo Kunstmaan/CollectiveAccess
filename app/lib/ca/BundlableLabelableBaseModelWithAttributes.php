@@ -2831,5 +2831,52 @@ $pa_options["display_form_field_tips"] = true;
 		return $o_res;
 	}
 	# --------------------------------------------------------------------------------------------
+	/**
+	 * Returns an array with as much as info as possible. This is used in the Web services, so that not to many requests need to be made.
+	 * Information added:
+	 * 	- field values
+	 * 	- metadata information
+	 * 	- label information
+	 *  - relation information
+	 */
+	public function getItemInformationForService($return_options = array()) {
+		$result = parent::getItemInformationForService($return_options);
+
+		if(!isset($return_options['relations']) || $return_options['relations'] == true) {
+			$primary_key = $this->getPrimaryKey();
+
+			$relationship_key = $primary_key.'_relations';
+			$relations_whole_content = $this->load_from_cache($relationship_key);
+			if(!isset($relations_whole_content) || !is_array($relations_whole_content)) {
+				$relations_whole_content = array();
+				$arr_objects = array(
+					"ca_objects" => 'object_id',
+					"ca_entities" => 'entity_id',
+					"ca_places" => 'place_id',
+					"ca_occurences" => 'occurence_id',
+					"ca_collections" => 'collection_id',
+					"ca_list_items" => 'item_id',
+				);
+				foreach($arr_objects as $object => $key) {
+					$relations = $this->getRelatedItems($object);
+					if(!empty($relations)) {
+						foreach($relations as $relation) {
+							$type_id = $relation["relationship_type_id"];
+							$rel_type = new ca_relationship_types($type_id);
+							$relation['relationship_type_name'] = $rel_type->get('type_code');
+							$relation['related_object_type'] = $object;
+							$id = $object.'-'.$relation[$key];
+							$relations_whole_content[$id] = $relation;
+						}
+					}
+				}
+				$this->save_to_cache($relationship_key, $relations_whole_content);
+			}
+			$result["relationships"] = $relations_whole_content;
+		}
+
+		return $result;
+	}
+	# --------------------------------------------------------------------------------------------
 }
 ?>

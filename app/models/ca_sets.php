@@ -1274,5 +1274,23 @@ LEFT JOIN ca_object_representations AS cor ON coxor.representation_id = cor.repr
 		return $vn_table_num;
 	}
 	# ------------------------------------------------------
+	/**
+	 * Returns an array with as much as info as possible. This is used in the Web services, so that not to many requests need to be made.
+	 * Information added:
+	 * 	- field values
+	 * 	- metadata information
+	 * 	- label information
+	 *  - relation information
+	 */
+	public function getItemInformationForService($pa_options=array()) {
+		$values_arr = parent::getItemInformationForService();
+		$values_arr['display_labels'] = $this->getDisplayLabels();
+		$values_arr['item_count'] = $this->getItemCount($pa_options);
+		$values_arr['set_content_type'] = $this->getSetPluralTypeName($this->get('table_num'));
+		$t_list = new ca_lists();
+		$values_arr['set_type'] = $t_list->getItemFromListForDisplayByItemID('set_types', $this->get('type_id'));
+    return $values_arr;
+	}
+	# ------------------------------------------------------
 }
 ?>

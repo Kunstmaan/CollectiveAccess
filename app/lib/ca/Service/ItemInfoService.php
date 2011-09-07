@@ -512,7 +512,7 @@ class ItemInfoService extends BaseService {
 	# Utilities
 	# -------------------------------------------------------
 	private function getTableInstance($ps_type, $pn_type_id_to_load=null,$pb_check_bm_with_attributes=false){
-		if(!in_array($ps_type, array("ca_objects", "ca_entities", "ca_places", "ca_occurrences", "ca_collections", "ca_list_items", "ca_object_representations"))){
+		if(!in_array($ps_type, array("ca_objects", "ca_entities", "ca_places", "ca_occurrences", "ca_collections", "ca_list_items", "ca_object_representations", "ca_storage_locations"))){
 			throw new SoapFault("Server", "Invalid type or item_id");
 		} else {
 			require_once(__CA_MODELS_DIR__."/{$ps_type}.php");

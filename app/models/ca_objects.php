@@ -923,5 +923,100 @@ class ca_objects extends BundlableLabelableBaseModelWithAttributes implements IB
 		return $va_media;
 	}
  	# ------------------------------------------------------
+	/**
+	 * Returns an array with as much as info as possible. This is used in the Web services, so that not to many requests need to be made.
+	 * Information added:
+	 * 	- field values
+	 * 	- metadata information
+	 * 	- label information
+	 *  - relation information
+	 *  - representation information
+	 */
+
+	public function getItemInformationForService($return_options = array()) {
+		$result = array();
+		$result = parent::getItemInformationForService($return_options);
+
+		if(!isset($return_options['representations']) || $return_options['representations'] == true || (isset($return_options['primary_representation_only']) && $return_options['primary_representation_only'] == true)) {
+			$primary_key = $this->getPrimaryKey();
+			$representations_result = array();
+			$o_db = $this->getDb();
+
+			if(isset($return_options['primary_representation_only']) && $return_options['primary_representation_only'] == true) {
+				$representations = $this->getRepresentations(null, null, array('return_primary_only' => 1));
+			} else {
+				$representations = $this->getRepresentations();
+			}
+
+			foreach($representations as $representation){
+				$rep_inst = NULL;
+				$rep_info = array();
+				$rep_info['meta_data']['is_primary'] = $representation['is_primary'];
+				$rep_info['meta_data']['original_filename'] = $representation['info']['original_filename'];
+				$rep_info['meta_data']['mime_type'] = $representation['info']['mime_type'];
+				$mediametadata = array();
+				$mediametadata = caUnserializeForDatabase($representation['media_metadata']);
+	 			$rep_info['meta_data']['codec'] = $mediametadata['video']['dataformat'];
+
+				$versions = array();
+				if(isset($return_options['representation_versions']) && is_array($return_options['representation_versions']) && !empty($return_options['representation_versions'])) {
+					$versions = $return_options['representation_versions'];
+				} else {
+					// TODO: make this configurable
+					$versions = array('lowresdownload', 'toprint', 'preview545', 'preview292', 'preview430', 'thumbmap', 'thumb185', 'thumb60', 'dia292', 'dia545', 'slider', 'tilepic', 'original', 'h264_hi', 'flv', 'mediumlarge', 'frontend_annotation');
+				}
+
+				$not_found = array();
+				$versions_info = array();
+
+				foreach($versions as $version) {
+					$version_key = $primary_key.'_rep_'.$representation["representation_id"].'_'.$version;
+					$version_info = $this->load_from_cache($version_key);
+					if(isset($version_info) && is_array($version_info) && !empty($version_info)) {
+						// found
+						$versions_info[$version] = $version_info;
+					} else {
+						// not found
+						$not_found[] = $version;
+					}
+				}
+
+				if(!empty($not_found)) {
+					if(!isset($rep_inst)) {
+						$rep_inst = new ca_object_representations($representation["representation_id"]);
+					}
+					$not_found_versions = $rep_inst->getVersionsForInformationService($not_found);
+					foreach($not_found_versions as $version => $version_info) {
+						$version_key = $primary_key.'_rep_'.$representation["representation_id"].'_'.$version;
+						$versions_info[$version] = $version_info;
+						$this->save_to_cache($version_key, $version_info);
+					}
+				}
+				$rep_info['versions'] = $versions_info;
+
+				if(!isset($return_options['representation_annotations']) || $return_options['representation_annotations'] == true) {
+					$annotations_key = $primary_key.'_rep_'.$representation["representation_id"].'_annotations';
+					$annotations = $this->load_from_cache($annotations_key);
+					if(!isset($annotations) || empty($annotations)) {
+						if(!isset($rep_inst)) {
+							$rep_inst = new ca_object_representations($representation["representation_id"]);
+						}
+						$annotations = $rep_inst->getAnnotations();
+						$this->save_to_cache($annotations_key, $annotations);
+					}
+					$rep_info['annotations'] = $annotations;
+				}
+
+				$representations_result[$representation["representation_id"]] = $rep_info;
+			}
+
+			$result["object_representations"] = $representations_result;
+		} else {
+			// we don't need representations
+		}
+
+		return $result;
+	}
+ 	# ------------------------------------------------------
 }
 ?>

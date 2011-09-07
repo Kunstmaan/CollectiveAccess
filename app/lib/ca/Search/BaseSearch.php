@@ -45,9 +45,15 @@ include_once(__CA_LIB_DIR__."/core/Search/SearchEngine.php");
 		}
 		# -------------------------------------------------------
 		public function &search($ps_search, $po_results, $pa_options=null) {
-			$vs_append_to_search = (isset($pa_options['appendToSearch'])) ? ' '.$pa_options['appendToSearch'] : '';
+			if (isset($pa_options['appendToSearch']) && !empty($pa_options['appendToSearch'])) {
+				$appendToSearch = trim($pa_options['appendToSearch']);
+				if(!(strpos(strtolower($appendToSearch), "and") === 0) && !(strpos(strtolower($appendToSearch), "or") === 0)) {
+					$appendToSearch = "AND ".$appendToSearch;
+				}
+				$ps_search = "{$ps_search} {$appendToSearch}";
+			}
 	
-			return parent::search($ps_search.$vs_append_to_search, $po_results, $pa_options);
+			return parent::search($ps_search, $po_results, $pa_options);
 		}
 		# -------------------------------------------------------
 	}

@@ -1001,5 +1001,30 @@ class ca_object_representations extends BundlableLabelableBaseModelWithAttribute
  		return $va_reps;
  	}
  	# ------------------------------------------------------
+ 	public function getVersionsForInformationService($versions = array()) {
+ 		$result = array();
+ 		foreach($versions as $version) {
+			$result[$version]['url'] = $this->getMediaUrl('media', $version);
+			$result[$version]['info'] = $this->getMediaInfo('media', $version);
+			// windows media player (asf) puts some weird stuff in this, this doesn't work in the service because it isn't UTF-8
+			$result[$version]['info']['PROPERTIES']['type_specific'] = array();
+		}
+		return $result;
+ 	}
+ 	# ------------------------------------------------------
+ 	public function getItemInformationForService($return_options = array()) {
+		$result = array();
+
+		if(isset($return_options['versions']) && is_array($return_options['versions']) && !empty($return_options['versions'])) {
+			$representations_to_return = $return_options['versions'];
+		} else {
+			$representations_to_return = $this->getMediaVersions('media');
+		}
+
+		$result['versions'] = $this->getVersionsForInformationService($representations_to_return);
+		$result['annotations'] = $this->getAnnotations();
+		return $result;
+ 	}
+ 	# ------------------------------------------------------
 }
 ?>
