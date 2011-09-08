@@ -426,7 +426,7 @@ class ca_objects extends BundlableLabelableBaseModelWithAttributes implements IB
  			$va_tmp['urls'] = array();
  			
  			$va_info = $qr_reps->getMediaInfo('media');
- 			$va_tmp['info'] = array('original_filename' => $va_info['ORIGINAL_FILENAME']);
+ 			$va_tmp['info'] = array('original_filename' => $va_info['ORIGINAL_FILENAME'], 'mime_type' => $va_info['INPUT']['MIMETYPE']);
  			foreach ($pa_versions as $vs_version) {
  				if (is_array($pa_version_sizes) && isset($pa_version_sizes[$vs_version])) {
  					$vn_width = $pa_version_sizes[$vs_version]['width'];
