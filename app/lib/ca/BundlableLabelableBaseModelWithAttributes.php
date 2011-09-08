@@ -120,7 +120,7 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 		
 		// stash attributes to add
 		$va_attributes_added = $this->opa_attributes_to_add;
-		if (!parent::insert($pa_options)) {	
+		if (!($vn_rc = parent::insert($pa_options))) {
 			// push all attributes onto errored list
 			$va_inserted_attributes_that_errored = array();
 			foreach($va_attributes_added as $va_info) {
