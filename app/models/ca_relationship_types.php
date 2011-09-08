@@ -356,6 +356,49 @@ class ca_relationship_types extends BundlableLabelableBaseModelWithAttributes {
 		return null;
 	}
 	# ------------------------------------------------------
+	public function getRelationshipInfoByTypeName($pm_table_name_or_num, $ps_type_name=null) {
+		if (!is_numeric($pm_table_name_or_num)) {
+			$vn_table_num = $this->getAppDatamodel()->getTableNum($pm_table_name_or_num);
+		} else {
+			$vn_table_num = $pm_table_name_or_num;
+		}
+		$vs_type_sql = '';
+		if ($ps_type_name) {
+			$vs_type_sql = " AND (crtl.typename = '".$this->getDb()->escape($ps_type_name)."' || crtl.typename_reverse= '".$this->getDb()->escape($ps_type_name)."' )";
+			//$vs_type_sql = " AND (crt.type_code = '".$this->getDb()->escape($ps_type_code)."')";
+
+		}
+		$qr_res = $this->getDb()->query("
+			SELECT *
+			FROM ca_relationship_types crt
+			INNER JOIN ca_relationship_type_labels AS crtl ON crt.type_id = crtl.type_id
+			WHERE
+				(crt.table_num = ?) {$vs_type_sql}
+		", (int)$vn_table_num);
+
+		$va_relationships = array();
+		while ($qr_res->nextRow()) {
+			$va_relationships[$qr_res->get('type_id')][$qr_res->get('locale_id')] = $qr_res->getRow();
+		}
+		return caExtractValuesByUserLocale($va_relationships);
+	}
+	# ------------------------------------------------------
+	/**
+	 *
+	 */
+	public function getRelationshipTypeByTypeName($pm_table_name_or_num, $ps_type_name) {
+		if ($va_relationships = $this->getRelationshipInfoByTypeName($pm_table_name_or_num, $ps_type_name)) {
+			foreach($va_relationships as $vn_type_id => $va_type_info) {
+				return array('type_id'=> $vn_type_id,
+						  'type_code'=>$va_type_info['type_code'],
+						  'typename'=>$va_type_info['typename'],
+						  'typename_reverse'=>$va_type_info['typename_reverse']
+						 );
+			}
+		}
+		return null;
+	}
+	# ------------------------------------------------------
 	/**
 	 * Returns array of tables that use relationship types
 	 *
