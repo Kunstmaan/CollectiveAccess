@@ -44,6 +44,7 @@
  		protected $ops_name_singular = '';
  		protected $ops_search_class = '';
  		protected $opo_item_instance;
+ 		protected $opo_app_plugin_manager;
  		
  		/**
  		 * @property $opa_filtera Criteria to filter list Get() return with; array keys are <tablename>.<fieldname> 
@@ -57,6 +58,7 @@
 			require_once(__CA_MODELS_DIR__."/".$this->ops_table_name.".php");
  			parent::__construct($po_request, $po_response, $pa_view_paths);
  			$this->opo_item_instance = new $this->ops_table_name();
+ 			$this->opo_app_plugin_manager = new ApplicationPluginManager();
  		}
  		# -------------------------------------------------------
  		# AJAX handlers
@@ -191,12 +193,22 @@
 					}
 					$va_items[$vn_id] = array_merge(
 						$va_value_list,
-						array('_display' => trim($vs_display_value))
+						array('_display' => trim($vs_display_value),
+                  'table_name' => $this->ops_table_name)
 					);
 				}
 			
 			}
-			$this->view->setVar(str_replace(' ', '_', $this->ops_name_singular).'_list', $va_items);
+
+      $va_items = $this->opo_app_plugin_manager->hookFilterLookup($va_items);
+			$va_items_filtered = array();
+			foreach($va_items as $key => $value) {
+				if(isset($value) && $value != null) {
+					$va_items_filtered[$key] = $value;
+				}
+			}
+
+			$this->view->setVar(str_replace(' ', '_', $this->ops_name_singular).'_list', $va_items_filtered);
  			return $this->render(str_replace(' ', '_', 'ajax_'.$this->ops_name_singular.'_list_html.php'));
 		}
  		# -------------------------------------------------------
