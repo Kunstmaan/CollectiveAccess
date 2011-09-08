@@ -133,7 +133,7 @@ $_ca_editor_ui_bundle_placement_settings = array(		// global
 		'description' => array(
 			'formatType' => FT_TEXT,
 			'displayType' => DT_FIELD,
-			'width' => 70, 'height' => 2,
+			'width' => 70, 'height' => 4,
 			'default' => '',
 			'label' => _t('Descriptive text for bundle.'),
 			'description' => _t('Descriptive text to use for help for bundle. Will override descriptive text set for underlying metadata element, if set.')
