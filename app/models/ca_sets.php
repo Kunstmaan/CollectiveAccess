@@ -1018,16 +1018,29 @@ LEFT JOIN ca_object_representations AS cor ON coxor.representation_id = cor.repr
 		if (!$this->haveAccessToSet($vn_user_id, __CA_SET_READ_ACCESS__)) { return 0; }
 		
 		$o_db = $this->getDb();
+		$o_dm = $this->getAppDatamodel();
+
+		if (!($t_rel_table = $o_dm->getInstanceByTableNum($this->get('table_num'), true))) { return null; }
+
+		// get set items
+		$vs_access_sql = '';
+		if (is_array($pa_options['checkAccess']) && sizeof($pa_options['checkAccess']) && ($t_rel_table->hasField('access'))) {
+			$vs_access_sql = ' AND rel.access IN ('.join(',', $pa_options['checkAccess']).')';
+		} elseif (isset($pa_options['checkAccess']) && is_numeric($pa_options['checkAccess']) && ($t_rel_table->hasField('access'))) {
+			$vs_access_sql = ' AND rel.access = '.$pa_options['checkAccess'];
+		}
 	
 		$qr_res = $o_db->query("
-			SELECT count(*) c
-			FROM ca_set_items
+			SELECT count(*) item_count
+			FROM ca_set_items csi
+			INNER JOIN ".$t_rel_table->tableName()." AS rel ON rel.".$t_rel_table->primaryKey()." = csi.row_id
 			WHERE
-				set_id = ?
+				csi.set_id = ?
+			{$vs_access_sql}
 		", (int)$vn_set_id);
 		
 		if ($qr_res->nextRow()) {
-			return (int)$qr_res->get('c');
+			return (int)$qr_res->get('item_count');
 		}
 		return 0;
 	}
