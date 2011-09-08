@@ -2783,7 +2783,11 @@ class BundlableLabelableBaseModelWithAttributes extends LabelableBaseModelWithAt
 					as $vs_key) {
 					if(!isset($va_attr[$vs_key])) { $va_attr[$vs_key] = null; }
 				}
-				
+
+				if(isset($pa_options['description']) && $pa_options['description']) {
+					$va_attr['DESCRIPTION'] = $pa_options['description'];
+				}
+
 // TODO: should be in config file
 $pa_options["display_form_field_tips"] = true;
 				if (
