@@ -330,10 +330,10 @@ class ca_item_comments extends BaseModel {
 		$vs_where = '';
 		switch($ps_mode) {
 			case 'unmoderated':
-				$vs_where = 'WHERE cic.moderated_on IS NULL';
+				$vs_where = 'WHERE cic.moderated_by_user_id IS NULL';
 				break;
 			case 'moderated':
-				$vs_where = 'WHERE cic.moderated_on IS NOT NULL';
+				$vs_where = 'WHERE cic.moderated_by_user_id IS NOT NULL';
 				break;
 		}
 	
