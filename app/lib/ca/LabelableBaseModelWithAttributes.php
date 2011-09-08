@@ -1453,5 +1453,34 @@
 			return $o_view->render('ca_users.php');
 		}
 		# ------------------------------------------------------
+		/**
+		 * Returns an array with as much as info as possible. This is used in the Web services, so that not to many requests need to be made.
+		 * Information added:
+		 * 	- field values
+		 * 	- metadata information
+		 * 	- label information
+		 */
+		public function getItemInformationForService($return_options = array()) {
+			$result = parent::getItemInformationForService($return_options);
+
+			if(!isset($return_options['labels']) || $return_options['labels'] == true) {
+				$primary_key = $this->getPrimaryKey();
+
+				$labels_key = $primary_key.'_labels';
+				$labels = $this->load_from_cache($labels_key);
+
+				if(!isset($labels) || empty($labels)) {
+					$labels = $this->getLabels(null, __CA_LABEL_TYPE_ANY__);
+					if(isset($labels) && is_array($labels)) {
+						$labels = array_pop($labels);
+					}
+					$this->save_to_cache($labels_key, $labels);
+				}
+
+				$result['labels'] = $labels;
+			}
+			return $result;
+		}
+		# ------------------------------------------------------
 	}
 ?>
