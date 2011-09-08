@@ -1061,11 +1061,31 @@ class ca_search_forms extends BundlableLabelableBaseModelWithAttributes {
 				if (!is_array($va_values)) { $va_values = array($va_values); }
 				foreach($va_values as $vs_value) {
 					if (!strlen(trim($vs_value))) { continue; }
-					if ((strpos($vs_value, ' ') !== false) && ($vs_value{0} != '[')) {
-						$vs_query_element = '"'.str_replace('"', '', $vs_value).'"';
-					} else {
-						$vs_query_element = $vs_value;
-					}
+          $element_arr = explode('.', $vs_element);
+          // custom query modification to fix searching on collection using CollectionAttribute
+          if(!empty($element_arr)) {
+            $o_db = $this->getDb();
+            $element_code = end($element_arr);
+            $qr_res = $o_db->query("SELECT datatype FROM ca_metadata_elements WHERE element_code = '".$element_code."'");
+            if($qr_res->nextRow()) {
+              $datatype = $qr_res->get('datatype');
+              if('23' == $datatype) {
+                $qry_array = explode('|', $vs_value);
+                if(!empty($qry_array)) {
+                  $id = end($qry_array);
+                  $vs_element = 'ca_collection_labels.collection_id:'.$id.' OR ca_collections._hier_ancestors';
+                  $vs_query_element = 'collections'.$id.'collections';
+                }
+              }
+            }
+          }
+          if(!isset($vs_query_element) || empty($vs_query_element)) {
+            if ((strpos($vs_value, ' ') !== false) && ($vs_value{0} != '[')) {
+              $vs_query_element = '"'.str_replace('"', '', $vs_value).'"';
+            } else {
+              $vs_query_element = $vs_value;
+            }
+          }
 					$va_query_elements[] = "({$vs_element}:{$vs_query_element})";
 				}
 			}
