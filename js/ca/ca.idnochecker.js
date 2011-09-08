@@ -45,38 +45,40 @@ var caUI = caUI || {};
 		
 		
 		that.checkIDNo = function() { 
-			jQuery('#' + that.idnoStatusID).html((that.processIndicator ? '<img src=\'' + that.processIndicator + '\' border=\'0\'/>' : ''));
-			var ids = jQuery.makeArray(jQuery(that.idnoFormElementIDs.join(',')));
-			
-			var vals = [];
-			jQuery.each(ids, function() {
-				vals.push(this.value);
-			});
-			var idno = vals.join(that.separator);
-			jQuery.getJSON(that.lookupUrl, { n: idno, id: that.row_id, _context_id: that.context_id }, 
-				function(data) {
-					if (
-						(
-							(data.length > 1) &&
-							(jQuery.inArray(that.row_id, data) === -1)
-						) ||
-						(
-							(data.length == 1) &&
-							(parseInt(data) != parseInt(that.row_id))
-						)
-					) {
-						var msg;
-						if (data.length == 1) {
-							msg = that.singularAlreadyInUseMessage;
-						} else {
-							msg = that.pluralAlreadyInUseMessage.replace('%1', '' + data.length);
-						}
-						jQuery('#' + that.idnoStatusID).html((that.errorIcon ? '<img src=\'' + that.errorIcon + '\' border=\'0\'/> ' : '') + msg).show(0);
-					} else{
-						jQuery('#' + that.idnoStatusID).html('').hide(0);
-					}
-				}
-			);
+			jQuery(this).stopTime('suggestIDNo').oneTime(500, 'suggestIDNo', function() {
+                            jQuery('#' + that.idnoStatusID).html((that.processIndicator ? '<img src=\'' + that.processIndicator + '\' border=\'0\'/>' : ''));
+                            var ids = jQuery.makeArray(jQuery(that.idnoFormElementIDs.join(',')));
+
+                            var vals = [];
+                            jQuery.each(ids, function() {
+                                    vals.push(this.value);
+                            });
+                            var idno = vals.join(that.separator);
+                            jQuery.getJSON(that.lookupUrl, { n: idno, id: that.row_id, _context_id: that.context_id },
+                                    function(data) {
+                                            if (
+                                                    (
+                                                            (data.length > 1) &&
+                                                            (jQuery.inArray(that.row_id, data) === -1)
+                                                    ) ||
+                                                    (
+                                                            (data.length == 1) &&
+                                                            (parseInt(data) != parseInt(that.row_id))
+                                                    )
+                                            ) {
+                                                    var msg;
+                                                    if (data.length == 1) {
+                                                            msg = that.singularAlreadyInUseMessage;
+                                                    } else {
+                                                            msg = that.pluralAlreadyInUseMessage.replace('%1', '' + data.length);
+                                                    }
+                                                    jQuery('#' + that.idnoStatusID).html((that.errorIcon ? '<img src=\'' + that.errorIcon + '\' border=\'0\'/> ' : '') + msg).show(0);
+                                            } else{
+                                                    jQuery('#' + that.idnoStatusID).html('').hide(0);
+                                            }
+                                    }
+                            );
+                        });
 		}
 		
 		jQuery(that.idnoFormElementIDs.join(',')).bind('change keyup', that.checkIDNo);
