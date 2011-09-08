@@ -363,10 +363,10 @@ class ca_item_comments extends BaseModel {
 		$vs_where = '';
 		switch($ps_mode){ 
 			case 'moderated':
-				$vs_where = "WHERE cic.moderated_on IS NOT NULL";
+				$vs_where = "WHERE cic.moderated_by_user_id IS NOT NULL";
 				break;
 			case 'unmoderated':
-				$vs_where = "WHERE cic.moderated_on IS NULL";
+				$vs_where = "WHERE cic.moderated_by_user_id IS NULL";
 				break;
 		}
 		if(intval($pn_limit) > 0){
@@ -378,7 +378,7 @@ class ca_item_comments extends BaseModel {
 		$qr_res = $o_db->query("
 			SELECT cic.*, u.user_id, u.fname, u.lname, u.email user_email
 			FROM ca_item_comments cic
-			INNER JOIN ca_users AS u ON u.user_id = cic.user_id
+			LEFT JOIN ca_users AS u ON u.user_id = cic.user_id
 			{$vs_where} ORDER BY cic.created_on DESC {$vs_limit}
 		");
 		
