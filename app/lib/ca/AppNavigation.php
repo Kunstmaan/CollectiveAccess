@@ -59,6 +59,12 @@
 			$this->opa_widgets_config = $this->opo_nav_config->getAssoc('widgets');
 			$this->ops_controller_path = $this->opo_request->config->get('controllers_directory');
 			
+			// fire hook
+			$o_app_plugin_manager = new ApplicationPluginManager();
+			if ($va_revised_nav_info = $o_app_plugin_manager->hookRenderMenuBar($this->opa_nav_config)) {
+				$this->opa_nav_config = $va_revised_nav_info;
+			}
+
 			$this->_genReverseNavTable();
 		}
 		# -------------------------------------------------------
@@ -302,12 +308,6 @@
 		public function getHTMLMenuBar($ps_css_id) {
 			$va_nav_info = $this->getNavInfo(0);	// get top-level navigation
 			
-			// fire hook
-			$o_app_plugin_manager = new ApplicationPluginManager();
-			if ($va_revised_nav_info = $o_app_plugin_manager->hookRenderMenuBar($va_nav_info)) {
-				$va_nav_info = $va_revised_nav_info;
-			}
-			
 			$vo_session = $this->opo_request->session;
 			if ((intval($this->opo_config->get('do_menu_bar_caching')) > 0) && ($vs_menu_cache = $vo_session->getVar('ca_nav_menubar_cache'))) { return $vs_menu_cache; }
 			
@@ -335,12 +335,6 @@
 		 */
 		public function getHTMLMenuBarAsLinkArray() {
 			$va_nav_info = $this->getNavInfo(0);	// get top-level navigation
-			
-			// fire hook
-			$o_app_plugin_manager = new ApplicationPluginManager();
-			if ($va_revised_nav_info = $o_app_plugin_manager->hookRenderMenuBar($va_nav_info)) {
-				$va_nav_info = $va_revised_nav_info;
-			}
 			
 			$vo_session = $this->opo_request->session;
 			if ((intval($this->opo_config->get('do_menu_bar_caching')) > 0) && ($va_menu_cache = $vo_session->getVar('ca_nav_menubar_link_cache'))) { return $va_menu_cache; }

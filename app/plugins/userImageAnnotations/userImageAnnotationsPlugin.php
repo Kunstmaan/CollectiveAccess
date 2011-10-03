@@ -29,7 +29,42 @@
 		public function hookRenderMenuBar($pa_menu_bar) {
 			if ($o_req = $this->getRequest()) {
 				if (!$o_req->user->canDoAction('can_manage_user_annotations')) { return null; }
+        // Add to menubar
 				$pa_menu_bar['manage']['navigation']['user_generated_content']['submenu']['navigation']['image_annotations'] = array(
+					'displayName' => _t('Annotaties'),
+					'default' => array(
+						'module' => 'userImageAnnotations',
+						'controller' => 'Annotations',
+						'action' => 'Index'
+					),
+					'is_enabled' => "1",
+					'requires' => array (),
+					'navigation' => array(
+						'moderate' => array(
+							"displayName" => _("Nieuwe annotaties"),
+							'default' => array(
+								'module' => 'userImageAnnotations',
+								'controller' => 'Annotations',
+								'action' => 'Index'
+							),
+							"is_enabled" => 1,
+							"requires" => array(),
+						),
+						"search" => array(
+							"displayName" => _("Goedgekeurde annotaties"),
+							'default' => array(
+								'module' => 'userImageAnnotations',
+								'controller' => 'Annotations',
+								'action' => 'ListModerated'
+							),
+							"useActionInPath" => 1,
+							"is_enabled" => 1,
+							"requires" => array()
+						)
+					)
+				);
+        // Add to sidebar menu
+				$pa_menu_bar['manage']['navigation']['user_generated_content']['navigation']['image_annotations'] = array(
 					'displayName' => _t('Annotaties'),
 					'default' => array(
 						'module' => 'userImageAnnotations',
