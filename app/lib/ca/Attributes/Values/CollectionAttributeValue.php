@@ -80,7 +80,23 @@ $_ca_attribute_settings['CollectionAttributeValue'] = array(
         'width' => 50, 'height' => 1,
         'label' => _t('Id of the field to copy the selection to'),
         'description' => _t('Insert DOM id where you want the id of the selected collection to be copied to. This is used for the Multipart ID Numbering.')
-    )
+    ),
+		'canBeUsedInSearchForm' => array(
+			'formatType' => FT_NUMBER,
+			'displayType' => DT_CHECKBOXES,
+			'default' => 1,
+			'width' => 1, 'height' => 1,
+			'label' => _t('Can be used in search form'),
+			'description' => _t('Check this option if this attribute value can be used in search forms. (The default is to be.)')
+		),
+		'canBeUsedInDisplay' => array(
+			'formatType' => FT_NUMBER,
+			'displayType' => DT_CHECKBOXES,
+			'default' => 1,
+			'width' => 1, 'height' => 1,
+			'label' => _t('Can be used in display'),
+			'description' => _t('Check this option if this attribute value can be used for display in search results. (The default is to be.)')
+		)
 );
 
 class CollectionAttributeValue extends AttributeValue implements IAttributeValue {
