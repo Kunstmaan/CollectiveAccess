@@ -1063,6 +1063,7 @@ class ca_search_forms extends BundlableLabelableBaseModelWithAttributes {
 					if (!strlen(trim($vs_value))) { continue; }
           $element_arr = explode('.', $vs_element);
           // custom query modification to fix searching on collection using CollectionAttribute
+          $vs_query_element = '';
           if(!empty($element_arr)) {
             $o_db = $this->getDb();
             $element_code = end($element_arr);
